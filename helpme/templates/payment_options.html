@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Payment - theHelpers</title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#3B82F6',
+              secondary: '#10B981'
+            },
+            borderRadius: {
+              'button': '8px'
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header from Dashboard -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <h1 class="text-2xl font-['Pacifico'] text-primary">theHelpers</h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+              <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+                {% if user.profile_image %}
+                  <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover" alt="Profile Image">
+                {% else %}
+                  <span class="text-white text-sm font-medium">
+                    {{ user.fname|first|upper }}{{ user.lname|first|upper }}
+                  </span>
+                {% endif %}
+              </div>
+              <span class="text-sm text-gray-700">{{ user.fname }} {{ user.lname }}</span>
+              <a href="{% url 'helpersapp:logout' %}" class="w-4 h-4 flex items-center justify-center text-gray-500" title="Logout">
+                <i class="ri-logout-box-r-line"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">Complete Your Payment</h2>
+                <p class="text-gray-600 mt-2">Confirm your details below to proceed with the payment.</p>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg border border-gray-200 p-6 mb-8 text-left">
+                <h3 class="font-semibold text-lg text-gray-800 mb-4">Summary & Details</h3>
+                <div class="space-y-4">
+                    <!-- Service and Budget -->
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Service:</span>
+                        <span class="font-medium text-gray-900">{{ request.get_service_category_display }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Budget:</span>
+                        <span class="font-bold text-2xl text-gray-900">₹{{ request.budget|floatformat:2 }}</span>
+                    </div>
+                    
+                    <hr class="my-4">
+
+                    <!-- User Details Form -->
+                    <div class="space-y-4">
+                        <div>
+                            <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                            <input type="text" id="first_name" name="first_name" value="{{ request.user.fname|default:'' }}" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" required>
+                        </div>
+                        <div>
+                            <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                            <input type="text" id="last_name" name="last_name" value="{{ request.user.lname|default:'' }}" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" required>
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Contact Email *</label>
+                            <input type="email" id="email" name="email" value="{{ request.user.email|default:'' }}" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" required>
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                            <input type="tel" id="phone" name="phone" value="{{ request.user.profile.phone_number|default:'' }}" class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <button id="pay-now-btn" class="w-full bg-primary text-white px-6 py-3 !rounded-button hover:bg-blue-600 transition-colors font-semibold text-lg flex items-center justify-center space-x-2">
+                    <i class="ri-secure-payment-fill"></i>
+                    <span>Pay Now Securely</span>
+                </button>
+                <a href="{% url 'helpersapp:pay_after_completion' request.id %}" class="w-full block bg-gray-600 text-white px-6 py-3 !rounded-button hover:bg-gray-700 transition-colors font-semibold text-lg text-center">
+                    Pay After Completion
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('pay-now-btn').addEventListener('click', function() {
+            // Get user details from the form
+            const firstName = document.getElementById('first_name').value;
+            const lastName = document.getElementById('last_name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+
+            // Basic validation
+            if (!firstName || !lastName || !email || !phone) {
+                alert('Please fill in all your contact details.');
+                return;
+            }
+
+            const requestId = "{{ request.id }}";
+            const csrfToken = "{{ csrf_token }}";
+
+            // Prepare data to send to the backend
+            const postData = {
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                phone: phone
+            };
+
+            fetch(`/user/payment/initiate/${requestId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData) // Send user details in the request body
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                const options = {
+                    "key": data.api_key,
+                    "amount": data.amount,
+                    "currency": data.currency,
+                    "name": "theHelpers",
+                    "description": "Payment for Service Request",
+                    "order_id": data.order_id,
+                    "handler": function (response){
+                        const formData = new FormData();
+                        formData.append('razorpay_payment_id', response.razorpay_payment_id);
+                        formData.append('razorpay_order_id', response.razorpay_order_id);
+                        formData.append('razorpay_signature', response.razorpay_signature);
+
+                        fetch(`/user/payment/success/${requestId}/`, {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': csrfToken },
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(result => {
+                            if (result.status === 'success') {
+                                window.location.href = "{% url 'helpersapp:dashboard' %}";
+                            } else {
+                                alert('Payment failed. Please try again.');
+                            }
+                        });
+                    },
+                    "prefill": {
+                        "name": `${firstName} ${lastName}`, // Use the data from the form
+                        "email": email,
+                        "contact": phone
+                    },
+                    "notes": {
+                        "phone": phone // You can add extra notes if needed
+                    },
+                    "theme": { "color": "#3B82F6" }
+                };
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+            });
+        });
+    </script>
+</body>
+</html>

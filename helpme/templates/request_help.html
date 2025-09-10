@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Request - theHelpers</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#3B82F6',
+              secondary: '#10B981'
+            },
+            borderRadius: {
+              'none': '0px',
+              'sm': '4px',
+              DEFAULT: '8px',
+              'md': '12px',
+              'lg': '16px',
+              'xl': '20px',
+              '2xl': '24px',
+              '3xl': '32px',
+              'full': '9999px',
+              'button': '8px'
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+      :where([class^="ri-"])::before {
+        content: "\f3c2";
+      }
+
+      .custom-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .custom-slider::-webkit-slider-track {
+        background: #e5e7eb;
+        height: 6px;
+        border-radius: 3px;
+      }
+
+      .custom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        background: #3B82F6;
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+
+      .custom-slider::-moz-range-track {
+        background: #e5e7eb;
+        height: 6px;
+        border-radius: 3px;
+        border: none;
+      }
+
+      .custom-slider::-moz-range-thumb {
+        background: #3B82F6;
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+      }
+
+      .custom-checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .custom-checkbox:checked {
+        background: #3B82F6;
+        border-color: #3B82F6;
+      }
+
+      .custom-checkbox:checked::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .custom-radio {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #d1d5db;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .custom-radio:checked {
+        border-color: #3B82F6;
+      }
+
+      .custom-radio:checked::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px;
+        height: 10px;
+        background: #3B82F6;
+        border-radius: 50%;
+      }
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center space-x-4">
+            <a href="{% url 'helpersapp:dashboard' %}" class="flex items-center space-x-2 text-gray-600 hover:text-primary transition-colors">
+              <div class="w-6 h-6 flex items-center justify-center">
+                <i class="ri-arrow-left-line"></i>
+              </div>
+              <span class="text-sm font-medium">Back to Requests</span>
+            </a>
+            <div class="w-px h-6 bg-gray-300"></div>
+            <h1 class="text-2xl font-['Pacifico'] text-primary">theHelpers</h1>
+          </div>
+          <nav class="hidden md:flex items-center space-x-8">
+            <a href="#" class="text-gray-700 hover:text-primary transition-colors">How it Works</a>
+            <a href="#" class="text-gray-700 hover:text-primary transition-colors">Services</a>
+            <a href="#" class="text-gray-700 hover:text-primary transition-colors">About</a>
+            <a href="#" class="text-gray-700 hover:text-primary transition-colors">Contact</a>
+          </nav>
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <button class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-primary transition-colors relative">
+                <i class="ri-notification-3-line ri-lg"></i>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+              </button>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                <span class="text-white text-sm font-medium">JD</span>
+              </div>
+              <span class="text-sm text-gray-700">John Doe</span>
+              <button class="w-4 h-4 flex items-center justify-center text-gray-500">
+                <i class="ri-arrow-down-s-line"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">Create New Request</h2>
+        <p class="text-gray-600">Tell us what you need help with and we'll connect you with local helpers</p>
+      </div>
+      <div class="mb-8">
+        <div class="flex items-center justify-between">
+          <div class="step-indicator active text-center" data-step="1">
+            <div class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-semibold mx-auto"> 1 </div>
+            <span class="text-sm font-medium text-primary mt-2 block">Service Details</span>
+          </div>
+          <div class="flex-1 h-px bg-gray-300 mx-4"></div>
+          <div class="step-indicator text-center" data-step="2">
+            <div class="w-10 h-10 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-semibold mx-auto"> 2 </div>
+            <span class="text-sm font-medium text-gray-500 mt-2 block">Location & Schedule</span>
+          </div>
+          <div class="flex-1 h-px bg-gray-300 mx-4"></div>
+          <div class="step-indicator text-center" data-step="3">
+            <div class="w-10 h-10 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-semibold mx-auto"> 3 </div>
+            <span class="text-sm font-medium text-gray-500 mt-2 block">Budget & Requirements</span>
+          </div>
+          <div class="flex-1 h-px bg-gray-300 mx-4"></div>
+          <div class="step-indicator text-center" data-step="4">
+            <div class="w-10 h-10 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-semibold mx-auto"> 4 </div>
+            <span class="text-sm font-medium text-gray-500 mt-2 block">Review & Submit</span>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <form id="request-form" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+          <div class="step-content" id="step-1">
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">Service Details</h3>
+            <div class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Service Category</label>
+                <div class="relative">
+                  <input type="hidden" name="service_category" id="service_category_input">
+                  <button type="button" id="category-dropdown" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between hover:border-gray-400 focus:border-primary focus:ring-1 focus:ring-primary">
+                    <span class="text-gray-500" id="category-selected">Select a category</span>
+                    <div class="w-5 h-5 flex items-center justify-center">
+                      <i class="ri-arrow-down-s-line text-gray-400"></i>
+                    </div>
+                  </button>
+                  <div id="category-options" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden z-10">
+                    <div class="py-2">
+                      <button type="button" class="w-full px-4 py-2 text-left hover:bg-gray-50 category-option" data-value="cleaning">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-6 h-6 flex items-center justify-center">
+                            <i class="ri-brush-line text-gray-600"></i>
+                          </div>
+                          <span>Cleaning Services</span>
+                        </div>
+                      </button>
+                      <button type="button" class="w-full px-4 py-2 text-left hover:bg-gray-50 category-option" data-value="moving">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-6 h-6 flex items-center justify-center">
+                            <i class="ri-truck-line text-gray-600"></i>
+                          </div>
+                          <span>Moving & Delivery</span>
+                        </div>
+                      </button>
+                      <button type="button" class="w-full px-4 py-2 text-left hover:bg-gray-50 category-option" data-value="assembly">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-6 h-6 flex items-center justify-center">
+                            <i class="ri-tools-line text-gray-600"></i>
+                          </div>
+                          <span>Furniture Assembly</span>
+                        </div>
+                      </button>
+                      <button type="button" class="w-full px-4 py-2 text-left hover:bg-gray-50 category-option" data-value="gardening">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-6 h-6 flex items-center justify-center">
+                            <i class="ri-plant-line text-gray-600"></i>
+                          </div>
+                          <span>Gardening & Landscaping</span>
+                        </div>
+                      </button>
+                      <button type="button" class="w-full px-4 py-2 text-left hover:bg-gray-50 category-option" data-value="handyman">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-6 h-6 flex items-center justify-center">
+                            <i class="ri-hammer-line text-gray-600"></i>
+                          </div>
+                          <span>Handyman Services</span>
+                        </div>
+                      </button>
+                      <button type="button" class="w-full px-4 py-2 text-left hover:bg-gray-50 category-option" data-value="other">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-6 h-6 flex items-center justify-center">
+                            <i class="ri-more-line text-gray-600"></i>
+                          </div>
+                          <span>Other Services</span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="subcategory-section" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
+                <div class="relative">
+                  <input type="hidden" name="subcategory" id="subcategory_input">
+                  <button type="button" id="subcategory-dropdown" class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between hover:border-gray-400 focus:border-primary focus:ring-1 focus:ring-primary">
+                    <span class="text-gray-500" id="subcategory-selected">Select a subcategory</span>
+                    <div class="w-5 h-5 flex items-center justify-center">
+                      <i class="ri-arrow-down-s-line text-gray-400"></i>
+                    </div>
+                  </button>
+                  <div id="subcategory-options" class="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden z-10">
+                    <div class="py-2" id="subcategory-list"></div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label for="task-description" class="block text-sm font-medium text-gray-700 mb-2">Task Description</label>
+                <textarea id="task-description" name="task_description" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary resize-none text-sm" placeholder="Describe what you need help with in detail. Include any specific requirements, tools needed, or special instructions..."></textarea>
+                <div class="flex justify-between items-center mt-2">
+                  <span class="text-xs text-gray-500">Be as specific as possible to get the best help</span>
+                  <span class="text-xs text-gray-500">
+                    <span id="char-count">0</span>/500 </span>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-4">Attach Photos (Optional)</label>
+                <div id="file-drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+                  <div class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-lg mx-auto mb-4">
+                    <i class="ri-image-add-line text-gray-600 ri-lg"></i>
+                  </div>
+                  <p class="text-sm text-gray-600 mb-2">Drop photos here or click to browse</p>
+                  <p class="text-xs text-gray-500">PNG, JPG up to 5MB each</p>
+                  <input type="file" id="file-input" name="photos" class="hidden" multiple accept="image/*">
+                </div>
+                <div id="uploaded-files" class="mt-4 space-y-2"></div>
+              </div>
+            </div>
+          </div>
+          <div class="step-content hidden" id="step-2">
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">Location & Schedule</h3>
+            <div class="space-y-6">
+              <div>
+                <label for="address" class="block text-sm font-medium text-gray-700 mb-2">Service Address</label>
+                <div class="relative">
+                  <input type="text" id="address" name="address" class="w-full px-4 py-3 pl-12 pr-24 border border-gray-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary text-sm" placeholder="Enter your address">
+                  <div class="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center">
+                    <i class="ri-map-pin-line text-gray-400"></i>
+                  </div>
+                  <button type="button" id="fetch-location" class="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-button flex items-center space-x-1">
+                    <i class="ri-gps-line"></i>
+                    <span>Auto-fetch</span>
+                  </button>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label for="service-date" class="block text-sm font-medium text-gray-700 mb-2">Preferred Date</label>
+                  <div class="relative">
+                    <input type="date" id="service-date" name="preferred_date" class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <div class="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center">
+                      <i class="ri-calendar-line text-gray-400"></i>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Time</label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <label class="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 time-slot">
+                      <input type="radio" name="preferred_time" value="Morning" class="custom-radio">
+                      <span class="text-sm">Morning</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 time-slot">
+                      <input type="radio" name="preferred_time" value="Afternoon" class="custom-radio">
+                      <span class="text-sm">Afternoon</span>
+                    </label>
+                    <label class="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 time-slot">
+                      <input type="radio" name="preferred_time" value="Evening" class="custom-radio">
+                      <span class="text-sm">Evening</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" name="is_flexible" class="custom-checkbox">
+                  <span class="text-sm text-gray-700">I'm flexible with the scheduling</span>
+                </label>
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" name="is_urgent" class="custom-checkbox">
+                  <span class="text-sm text-gray-700">This is an urgent request</span>
+                </label>
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" name="has_parking" class="custom-checkbox">
+                  <span class="text-sm text-gray-700">I can provide parking for the helper</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="step-content hidden" id="step-3">
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">Budget & Requirements</h3>
+            <div class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-4">Payment Type</label>
+                <div class="grid grid-cols-2 gap-4">
+                  <label class="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 payment-type">
+                    <input type="radio" name="payment_type" value="Hourly" class="custom-radio">
+                    <div>
+                      <span class="text-sm font-medium">Hourly Rate</span>
+                      <p class="text-xs text-gray-500">Pay by the hour</p>
+                    </div>
+                  </label>
+                  <label class="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 payment-type">
+                    <input type="radio" name="payment_type" value="Fixed" class="custom-radio">
+                    <div>
+                      <span class="text-sm font-medium">Fixed Price</span>
+                      <p class="text-xs text-gray-500">One-time payment</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-4">Budget Range</label>
+                <div class="px-4">
+                  <div class="relative">
+                    <input type="number" id="budget-input" name="budget" min="2000" max="40000" value="8000" step="500" class="w-full px-4 py-3 pl-8 border border-gray-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary text-sm" placeholder="Enter budget amount">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <span class="text-gray-500">₹</span>
+                    </div>
+                  </div>
+                  <div class="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>Min: ₹2,000</span>
+                    <span>Max: ₹40,000+</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label for="special-requirements" class="block text-sm font-medium text-gray-700 mb-2">Special Requirements</label>
+                <textarea id="special-requirements" name="special_requirements" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary resize-none text-sm" placeholder="Any special tools, skills, or requirements for this task..."></textarea>
+              </div>
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" name="helper_brings_tools" class="custom-checkbox">
+                  <span class="text-sm text-gray-700">Helper must bring their own tools</span>
+                </label>
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" name="background_check_required" class="custom-checkbox">
+                  <span class="text-sm text-gray-700">Background check required</span>
+                </label>
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" name="insurance_needed" class="custom-checkbox">
+                  <span class="text-sm text-gray-700">Insurance coverage needed</span>
+                </label>
+                <label class="flex items-center space-x-3">
+                  <input type="checkbox" name="experience_required" class="custom-checkbox">
+                  <span class="text-sm text-gray-700">Experience in this service type required</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="step-content hidden" id="step-4">
+            <h3 class="text-xl font-semibold text-gray-900 mb-6">Review & Submit</h3>
+            <div class="space-y-6">
+              <div class="bg-gray-50 rounded-lg p-6">
+                <h4 class="font-semibold text-gray-900 mb-4">Request Summary</h4>
+                <div class="space-y-3">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Service:</span>
+                    <span class="font-medium" id="summary-service">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Location:</span>
+                    <span class="font-medium" id="summary-location">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Date & Time:</span>
+                    <span class="font-medium" id="summary-datetime">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Budget:</span>
+                    <span class="font-medium" id="summary-budget">-</span>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-blue-50 rounded-lg p-4">
+                <div class="flex items-start space-x-3">
+                  <div class="w-6 h-6 flex items-center justify-center">
+                    <i class="ri-information-line text-blue-600"></i>
+                  </div>
+                  <div>
+                    <h5 class="font-medium text-blue-900">What happens next?</h5>
+                    <p class="text-sm text-blue-700 mt-1">Your request will be posted to our network of verified helpers. You'll receive applications within 24 hours and can choose the best helper for your needs.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <label class="flex items-start space-x-3">
+                  <input type="checkbox" id="terms-agree" class="custom-checkbox mt-1" required>
+                  <span class="text-sm text-gray-700">I agree to the <a href="#" class="text-primary hover:underline">Terms of Service</a> and <a href="#" class="text-primary hover:underline">Privacy Policy</a>
+                  </span>
+                </label>
+                <label class="flex items-start space-x-3">
+                  <input type="checkbox" class="custom-checkbox mt-1">
+                  <span class="text-sm text-gray-700">Send me email updates about my request and similar services</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+            <button type="button" id="prev-btn" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-button hover:bg-gray-50 transition-colors whitespace-nowrap"> Previous </button>
+            <button type="button" id="next-btn" class="bg-primary text-white px-6 py-3 !rounded-button hover:bg-blue-600 transition-colors whitespace-nowrap"> Next Step </button>
+            <button type="submit" id="submit-btn" class="bg-primary text-white px-6 py-3 !rounded-button hover:bg-blue-600 transition-colors whitespace-nowrap hidden"> Submit Request </button>
+          </div>
+        </form>
+      </div>
+    </main>
+    <script id="form-wizard">
+      document.addEventListener('DOMContentLoaded', function() {
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function updateStepIndicator() {
+          document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
+            const stepNum = parseInt(indicator.dataset.step);
+            const circle = indicator.querySelector('div');
+            const text = indicator.querySelector('span');
+
+            if (stepNum < currentStep) {
+              circle.className = 'w-10 h-10 bg-secondary text-white rounded-full flex items-center justify-center font-semibold mx-auto';
+              circle.innerHTML = '<i class="ri-check-line"></i>';
+              text.className = 'text-sm font-medium text-secondary mt-2 block';
+            } else if (stepNum === currentStep) {
+              circle.className = 'w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-semibold mx-auto';
+              circle.textContent = stepNum;
+              text.className = 'text-sm font-medium text-primary mt-2 block';
+            } else {
+              circle.className = 'w-10 h-10 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-semibold mx-auto';
+              circle.textContent = stepNum;
+              text.className = 'text-sm font-medium text-gray-500 mt-2 block';
+            }
+          });
+        }
+
+        function showStep(step) {
+          document.querySelectorAll('.step-content').forEach(content => {
+            content.classList.add('hidden');
+          });
+          document.getElementById(`step-${step}`).classList.remove('hidden');
+          const prevBtn = document.getElementById('prev-btn');
+          const nextBtn = document.getElementById('next-btn');
+          const submitBtn = document.getElementById('submit-btn');
+          
+          prevBtn.style.visibility = step === 1 ? 'hidden' : 'visible';
+          if (step === 1) {
+            prevBtn.onclick = () => window.location.href = "{% url 'helpersapp:dashboard' %}";
+          } else {
+            prevBtn.onclick = () => {
+              currentStep--;
+              showStep(currentStep);
+            };
+          }
+
+          if (step === totalSteps) {
+            nextBtn.classList.add('hidden');
+            submitBtn.classList.remove('hidden');
+          } else {
+            nextBtn.classList.remove('hidden');
+            submitBtn.classList.add('hidden');
+          }
+          updateStepIndicator();
+        }
+
+        document.getElementById('next-btn').addEventListener('click', function() {
+          if (currentStep < totalSteps) {
+            if (currentStep === 3) {
+              updateSummary();
+            }
+            currentStep++;
+            showStep(currentStep);
+          }
+        });
+
+        function updateSummary() {
+          const category = document.getElementById('category-selected').textContent;
+          const subcategory = document.getElementById('subcategory-selected').textContent;
+          const address = document.getElementById('address').value;
+          const date = document.getElementById('service-date').value;
+          const timeSlot = document.querySelector('input[name="preferred_time"]:checked')?.value;
+          const budgetValue = document.getElementById('budget-input').value;
+          const paymentType = document.querySelector('input[name="payment_type"]:checked')?.value;
+          const formattedBudget = `₹${parseInt(budgetValue).toLocaleString('en-IN')}`;
+          
+          document.getElementById('summary-service').textContent = category !== 'Select a category' ? `${category} - ${subcategory}` : '-';
+          document.getElementById('summary-location').textContent = address || '-';
+          document.getElementById('summary-datetime').textContent = date && timeSlot ? `${date} (${timeSlot})` : '-';
+          document.getElementById('summary-budget').textContent = `${formattedBudget} (${paymentType || 'N/A'})`;
+        }
+        showStep(1);
+      });
+    </script>
+    <script id="dropdown-functionality">
+      document.addEventListener('DOMContentLoaded', function() {
+        const categoryDropdown = document.getElementById('category-dropdown');
+        const categoryOptions = document.getElementById('category-options');
+        const categorySelected = document.getElementById('category-selected');
+        const subcategorySection = document.getElementById('subcategory-section');
+        const subcategoryDropdown = document.getElementById('subcategory-dropdown');
+        const subcategoryOptions = document.getElementById('subcategory-options');
+        const subcategorySelected = document.getElementById('subcategory-selected');
+        const subcategoryList = document.getElementById('subcategory-list');
+        const categoryInput = document.getElementById('service_category_input');
+        const subcategoryInput = document.getElementById('subcategory_input');
+        
+        const subcategories = {
+          cleaning: ['House Cleaning', 'Office Cleaning', 'Deep Cleaning', 'Post-Construction Cleanup', 'Window Cleaning'],
+          moving: ['Local Moving', 'Packing Services', 'Furniture Moving', 'Delivery Services', 'Storage Assistance'],
+          assembly: ['IKEA Furniture', 'Office Furniture', 'Bed Assembly', 'Desk Assembly', 'Shelving Units'],
+          gardening: ['Lawn Mowing', 'Garden Cleanup', 'Planting', 'Tree Trimming', 'Landscaping'],
+          handyman: ['Minor Repairs', 'Installation Services', 'Painting', 'Electrical Work', 'Plumbing'],
+          other: ['Pet Care', 'Tutoring', 'Event Help', 'Personal Assistant', 'Custom Request']
+        };
+
+        categoryDropdown.addEventListener('click', function() {
+          categoryOptions.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function(e) {
+          if (!categoryDropdown.contains(e.target)) {
+            categoryOptions.classList.add('hidden');
+          }
+          if (!subcategoryDropdown.contains(e.target)) {
+            subcategoryOptions.classList.add('hidden');
+          }
+        });
+
+        document.querySelectorAll('.category-option').forEach(option => {
+          option.addEventListener('click', function() {
+            const value = this.dataset.value;
+            const text = this.querySelector('span').textContent.trim();
+            categorySelected.textContent = text;
+            categoryInput.value = value; // Set hidden input value
+            categorySelected.classList.remove('text-gray-500');
+            categoryOptions.classList.add('hidden');
+            subcategoryList.innerHTML = '';
+            if (subcategories[value]) {
+              subcategories[value].forEach(sub => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'w-full px-4 py-2 text-left hover:bg-gray-50 subcategory-option';
+                button.textContent = sub;
+                button.addEventListener('click', function() {
+                  subcategorySelected.textContent = sub;
+                  subcategoryInput.value = sub; // Set hidden input value
+                  subcategorySelected.classList.remove('text-gray-500');
+                  subcategoryOptions.classList.add('hidden');
+                });
+                subcategoryList.appendChild(button);
+              });
+              subcategorySection.classList.remove('hidden');
+              subcategorySelected.textContent = 'Select a subcategory';
+              subcategorySelected.classList.add('text-gray-500');
+            }
+          });
+        });
+
+        subcategoryDropdown.addEventListener('click', function() {
+          subcategoryOptions.classList.toggle('hidden');
+        });
+      });
+    </script>
+    <script id="form-interactions">
+      document.addEventListener('DOMContentLoaded', function() {
+        const taskDescription = document.getElementById('task-description');
+        const charCount = document.getElementById('char-count');
+        const fetchLocationBtn = document.getElementById('fetch-location');
+        const addressInput = document.getElementById('address');
+        fetchLocationBtn.addEventListener('click', function() {
+          const originalText = this.innerHTML;
+          this.innerHTML = '<i class="ri-loader-4-line animate-spin"></i>';
+          this.disabled = true;
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
+              fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`).then(response => response.json()).then(data => {
+                addressInput.value = data.display_name;
+                fetchLocationBtn.innerHTML = originalText;
+                fetchLocationBtn.disabled = false;
+              }).catch(() => {
+                addressInput.value = '';
+                fetchLocationBtn.innerHTML = originalText;
+                fetchLocationBtn.disabled = false;
+              });
+            }, function(error) {
+              fetchLocationBtn.innerHTML = originalText;
+              fetchLocationBtn.disabled = false;
+            });
+          }
+        });
+        
+        const fileDropZone = document.getElementById('file-drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadedFiles = document.getElementById('uploaded-files');
+        taskDescription.addEventListener('input', function() {
+          const count = this.value.length;
+          charCount.textContent = count;
+          if (count > 500) {
+            this.value = this.value.substring(0, 500);
+            charCount.textContent = 500;
+          }
+        });
+        
+        fileDropZone.addEventListener('click', function() {
+          fileInput.click();
+        });
+        fileDropZone.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          this.classList.add('border-primary');
+        });
+        fileDropZone.addEventListener('dragleave', function(e) {
+          e.preventDefault();
+          this.classList.remove('border-primary');
+        });
+        fileDropZone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          this.classList.remove('border-primary');
+          handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', function() {
+          handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+          Array.from(files).forEach(file => {
+            if (file.type.startsWith('image/')) {
+              const fileItem = document.createElement('div');
+              fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+              fileItem.innerHTML = `
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 flex items-center justify-center bg-primary rounded">
+                    <i class="ri-image-line text-white"></i>
+                  </div>
+                  <span class="text-sm text-gray-700">${file.name}</span>
+                </div>
+                <button type="button" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-600">
+                  <i class="ri-close-line"></i>
+                </button>`;
+              fileItem.querySelector('button').addEventListener('click', function() {
+                fileItem.remove();
+              });
+              uploadedFiles.appendChild(fileItem);
+            }
+          });
+        }
+        document.querySelectorAll('input[name="preferred_time"]').forEach(radio => {
+          radio.addEventListener('change', function() {
+            document.querySelectorAll('.time-slot').forEach(slot => {
+              slot.classList.remove('border-primary', 'bg-blue-50');
+            });
+            if (this.checked) {
+              this.closest('.time-slot').classList.add('border-primary', 'bg-blue-50');
+            }
+          });
+        });
+        document.querySelectorAll('input[name="payment_type"]').forEach(radio => {
+          radio.addEventListener('change', function() {
+            document.querySelectorAll('.payment-type').forEach(type => {
+              type.classList.remove('border-primary', 'bg-blue-50');
+            });
+            if (this.checked) {
+              this.closest('.payment-type').classList.add('border-primary', 'bg-blue-50');
+            }
+          });
+        });
+        
+        document.getElementById('request-form').addEventListener('submit', function(e) {
+          // The default form submission will now be handled by the browser
+        });
+      });
+    </script>
+  </body>
+</html>

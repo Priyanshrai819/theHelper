@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Details - theHelpers</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#3B82F6',
+              secondary: '#10B981'
+            },
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center space-x-4">
+            <a href="{% url 'helpers:helper_dashboard' %}" class="flex items-center space-x-2 text-gray-600 hover:text-primary transition-colors">
+              <i class="ri-arrow-left-line"></i>
+              <span class="text-sm font-medium">Back to Dashboard</span>
+            </a>
+            <div class="w-px h-6 bg-gray-300"></div>
+            <h1 class="text-2xl font-['Pacifico'] text-primary">theHelpers</h1>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-10">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-bold text-gray-900">{{ request.get_service_category_display }}</h2>
+                {% if request.status == 'Completed' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">{{ request.status }}</span>
+                {% elif request.status == 'Active' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">{{ request.status }}</span>
+                {% elif request.status == 'Pending' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">{{ request.status }}</span>
+                {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">{{ request.status }}</span>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div class="md:col-span-2 space-y-8">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Description</h3>
+                        <p class="text-gray-600 leading-relaxed">{{ request.task_description }}</p>
+                    </div>
+                     <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Special Requirements</h3>
+                        <p class="text-gray-600 leading-relaxed">{{ request.special_requirements|default:"None provided." }}</p>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-gray-50 p-6 rounded-lg border">
+                        <h3 class="font-semibold text-gray-800 mb-4">Details</h3>
+                        <div class="space-y-4 text-sm">
+                            <div class="flex justify-between"><span class="text-gray-500">Budget:</span><span class="font-medium">₹{{ request.budget }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Payment:</span><span class="font-medium">{{ request.payment_type }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Date:</span><span class="font-medium">{{ request.preferred_date }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Time:</span><span class="font-medium">{{ request.preferred_time }}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">Location:</span><span class="font-medium text-right">{{ request.address }}</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="border-t border-gray-200 mt-8 pt-6">
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="text-secondary hover:text-green-600 text-sm font-medium">Contact Requester</a>
+                    
+                    {% comment %} {% if request.status == 'Pending' or request.status == 'Active' %}
+                    <a href="{% url 'helpers:cancel_request' request.id %}" class="text-red-600 hover:text-red-700 text-sm font-medium">Cancel Request</a>
+                    {% endif %}  {% endcomment %}
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
