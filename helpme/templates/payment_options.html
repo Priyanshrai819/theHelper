@@ -35,21 +35,30 @@
             <h1 class="text-2xl font-['Pacifico'] text-primary">theHelpers</h1>
           </div>
           <div class="flex items-center space-x-4">
-            <div class="flex items-center space-x-2">
+           <div class="flex items-center space-x-4">
+            <div class="relative">
+              <button class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-primary transition-colors relative">
+                <i class="ri-notification-3-line ri-lg"></i>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">0</span>
+              </button>
+            </div>
+           <div class="flex items-center space-x-2">
               <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
-                {% if user.profile_image %}
-                  <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover" alt="Profile Image">
-                {% else %}
-                  <span class="text-white text-sm font-medium">
-                    {{ user.fname|first|upper }}{{ user.lname|first|upper }}
-                  </span>
-                {% endif %}
+                  {% if user.profile_image %}
+                      <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover" alt="Profile Image">
+                  {% else %}
+                      <span class="text-white text-sm font-medium">
+                          {{ user.fname|first|upper }}{{ user.lname|first|upper }}
+                      </span>
+                  {% endif %}
               </div>
               <span class="text-sm text-gray-700">{{ user.fname }} {{ user.lname }}</span>
-              <a href="{% url 'helpersapp:logout' %}" class="w-4 h-4 flex items-center justify-center text-gray-500" title="Logout">
+              
+              <!-- CORRECTED LOGOUT LINK -->
+              <a href="{% url 'helpersapp:logout' %}" class="w-4 h-4 flex items-center justify-center text-gray-500">
                 <i class="ri-logout-box-r-line"></i>
               </a>
-            </div>
+          </div>
           </div>
         </div>
       </div>

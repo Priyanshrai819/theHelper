@@ -135,3 +135,25 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment for Request {self.service_request.id}"
 
+
+
+
+
+
+class Notification(models.Model):
+    """
+    Stores notifications for both Requesters and Helpers.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='requester_notifications')
+    helper = models.ForeignKey('helpers.Helper', on_delete=models.CASCADE, null=True, blank=True, related_name='helper_notifications_userapp')
+    title = models.CharField(max_length=100)
+    message = models.TextField()
+    link = models.CharField(max_length=255, blank=True, null=True) # URL to redirect when clicked
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user or self.helper}: {self.title}"

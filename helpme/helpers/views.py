@@ -1,10 +1,52 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password, check_password
-from helpersapp.models import ServiceRequest # Assuming Helper model is in helpersapp
+from helpersapp.models import ServiceRequest  # Assuming Helper model is in helpersapp
+from helpersapp.models import Notification as UserNotification
 from django.contrib import messages
-from .models import Helper, JobApplication
+from .models import Helper, JobApplication,Notification
 from django.db.models import Sum
 import random
+from django.http import JsonResponse
+
+
+
+def get_notifications(request):
+    """
+    API to fetch unread notifications for the logged-in user or helper.
+    """
+    user_id = request.session.get('user_id')
+    helper_id = request.session.get('helper_id')
+    
+    notifications = []
+    if user_id:
+        notifications = Notification.objects.filter(user_id=user_id, is_read=False)
+    elif helper_id:
+        notifications = Notification.objects.filter(helper_id=helper_id, is_read=False)
+        
+    data = [{
+        'id': n.id,
+        'title': n.title,
+        'message': n.message,
+        'link': n.link,
+        'created_at': n.created_at.strftime('%b %d, %H:%M')
+    } for n in notifications]
+    
+    return JsonResponse({'notifications': data, 'count': len(data)})
+
+def mark_notification_read(request, notification_id):
+    """
+    Marks a specific notification as read.
+    """
+    notification = get_object_or_404(Notification, id=notification_id)
+    notification.is_read = True
+    notification.save()
+    return JsonResponse({'status': 'success'})
+
+
+
+
+
+
 
 def mark_job_completed(request, request_id):
     """
@@ -215,6 +257,19 @@ def accept_request(request, request_id):
         )
         
         messages.success(request, f"You have successfully accepted the '{service_request.get_service_category_display()}' job.")
+        Notification.objects.create(
+        helper=helper, # Notify the Helper
+        title="Job Accepted",
+        message=f"You have accepted the request for {service_request.subcategory}.",
+        link=f"/helpers/request/{service_request.id}/" # Link to details
+    )
+    #     UserNotification.objects.create(
+    #     user=service_request.user, # Notify the Requester
+    #     title="Job Accepted",
+    #     message=f"Helper {helper.fname} has accepted your request for {service_request.subcategory}.",
+    #     link=f"/user/request/{service_request.id}/" # Link to details   
+    # )
+        
     else:
         # If the job was already taken, inform the helper
         messages.error(request, "This job is no longer available.")

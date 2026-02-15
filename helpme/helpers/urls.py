@@ -13,4 +13,9 @@ urlpatterns = [
     path('request/accept/<int:request_id>/', views.accept_request, name='accept_request'),
     path('request/complete/<int:request_id>/', views.mark_job_completed, name='complete_request'),
     # path('request/cancel/<int:request_id>/', views.cancel_request, name='cancel_request'),
+
+    path('api/notifications/', views.get_notifications, name='get_notifications'),
+    path('api/notifications/read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
+
+
 ]

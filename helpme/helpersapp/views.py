@@ -5,13 +5,97 @@ from django.contrib import messages
 from django.http import JsonResponse
 import requests
 from django.contrib.auth.hashers import make_password, check_password
-from .models import User, ServiceRequest, RequestPhoto ,Payment, ChatMessage
+from .models import User, ServiceRequest, RequestPhoto ,Payment, ChatMessage,Notification
 from helpers.models import Helper 
 from django.conf import settings
 import razorpay
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+
+
+
+# --- NEW: Import signals and Django's default User model ---
+from allauth.account.signals import user_logged_in
+from django.dispatch import receiver
+from django.contrib.auth.models import User as AuthUser
+
+
+
+
+
+
+
+
+def get_notifications(request):
+    """
+    API to fetch unread notifications for the logged-in user or helper.
+    """
+    user_id = request.session.get('user_id')
+    helper_id = request.session.get('helper_id')
+    
+    notifications = []
+    if user_id:
+        notifications = Notification.objects.filter(user_id=user_id, is_read=False)
+    elif helper_id:
+        notifications = Notification.objects.filter(helper_id=helper_id, is_read=False)
+        
+    data = [{
+        'id': n.id,
+        'title': n.title,
+        'message': n.message,
+        'link': n.link,
+        'created_at': n.created_at.strftime('%b %d, %H:%M')
+    } for n in notifications]
+    
+    return JsonResponse({'notifications': data, 'count': len(data)})
+
+def mark_notification_read(request, notification_id):
+    """
+    Marks a specific notification as read.
+    """
+    notification = get_object_or_404(Notification, id=notification_id)
+    notification.is_read = True
+    notification.save()
+    return JsonResponse({'status': 'success'})
+
+
+
+
+
+
+
+
+
+
+
+
+
+# --- CORRECTED: Signal Receiver Function ---
+@receiver(user_logged_in)
+def user_logged_in_receiver(request, user, **kwargs):
+    """
+    Listens for a successful login from allauth (including Google).
+    This function acts as a bridge: it finds or creates our custom User
+    and then sets our custom 'user_id' in the session to ensure the user
+    is logged into our custom authentication system.
+    """
+    # Find our custom User by email. If it doesn't exist, create it.
+    custom_user, created = User.objects.get_or_create(
+        email=user.email,
+        defaults={
+            'fname': user.first_name or user.username,
+            'lname': user.last_name or '',
+            # Create a dummy, unusable password for social-only users
+            'password': make_password(None) 
+        }
+    )
+    
+    # This is the crucial step: Set the custom session variable that
+    # the dashboard and other views are checking for. This fixes the redirect loop.
+    request.session['user_id'] = custom_user.id
+
+
 
 
 
@@ -30,6 +114,12 @@ def verify_otp_view(request, request_id):
             service_request.save()
             
             messages.success(request, "Job successfully marked as completed!")
+            Notification.objects.create(
+            user=service_request.user, # Notify the Requester
+            title="Job Completed",
+            message=f"Your request for {service_request.subcategory} has been marked as completed by the helper.",
+            link=f"/user/request/{service_request.id}/" # Link to details
+            )
             return redirect('helpers:helper_dashboard')
         else:
             # OTP is incorrect
@@ -69,6 +159,7 @@ def auth(request):
                     if check_password(password, user.password):
                         request.session['user_id'] = user.id
                         return redirect('helpersapp:dashboard')
+                        
                     else:
                         login_errors['general'] = 'Invalid email or password.'
                 except User.DoesNotExist:
@@ -128,6 +219,12 @@ def dashboard(request):
 
     try:
         user = User.objects.get(id=request.session['user_id'])
+        Notification.objects.create(
+            user=user,
+            title="Login Successful",
+            message="You have successfully logged in to your dashboard.",
+            link="/user/dashboard/"
+        )
         
         # Get all requests for the user
         all_requests = ServiceRequest.objects.filter(user=user)
@@ -164,7 +261,9 @@ def logout(request):
     """
     if 'user_id' in request.session:
         del request.session['user_id']
-    return redirect('helpersapp:auth')
+    from django.contrib.auth import logout as auth_logout
+    auth_logout(request)
+    return redirect('options')
 
 
 
@@ -242,11 +341,12 @@ def request_help(request):
         except Exception as e:
             # Handle potential errors, e.g., user not found or invalid data
             messages.error(request, f"An error occurred: {e}")
-            return render(request, 'request_help.html') # Re-render the form page with an error
+            return render(request, 'request_help.html', {'user': current_user}) # Re-render the form page with an error
 
+    
+    _user = User.objects.get(id=request.session['user_id'])
     # For a GET request, just display the form
-    return render(request, 'request_help.html')
-
+    return render(request, 'request_help.html', {'user': _user})
 
 
 
@@ -276,6 +376,12 @@ def pay_after_completion(request, request_id):
         
     service_request = get_object_or_404(ServiceRequest, id=request_id, user_id=request.session['user_id'])
     messages.success(request, f"Your request for '{service_request.get_service_category_display()}' has been posted! You can pay after the job is completed.")
+    Notification.objects.create(
+        user=service_request.user, # Notify the Requester
+        title="Request Posted",
+        message=f"Your request for {service_request.subcategory} has been successfully posted. You can pay after completion.",
+        link=f"/user/request/{service_request.id}/" # Link to details
+    )
     return redirect('helpersapp:dashboard')
 
 
@@ -326,6 +432,14 @@ def cancel_request(request, request_id):
         service_request.status = 'Cancelled'
         service_request.save()
         messages.success(request, f"Request '{service_request.get_service_category_display()}' has been cancelled.")
+        Notification.objects.create(
+        user=service_request.user, # Notify the Requester
+        title="Request Cancelled",
+        message=f"Your request for {service_request.subcategory} has been cancelled.",
+        link=f"/user/request/{service_request.id}/" # Link to details
+    )
+
+
     else:
         messages.error(request, "This request cannot be cancelled.")
         
@@ -412,7 +526,14 @@ def payment_success(request, request_id):
             service_request.save()
             
             messages.success(request, "Payment successful!")
+            Notification.objects.create(
+            user=service_request.user, # Notify the Requester
+            title="Payment Successful",
+            message=f"Your payment for {service_request.subcategory} has been successfully processed.",
+            link=f"/user/request/{service_request.id}/" # Link to details
+            )
             return JsonResponse({'status': 'success'})
+        
 
         except Exception as e:
             messages.error(request, f"Payment verification failed: {e}")
@@ -457,8 +578,14 @@ def contact_helper(request, request_id):
     
     # A user can only contact the helper if one has been accepted
     if not service_request.accepted_helper:
-        messages.error(request, "No helper has been assigned to this request yet.")
-        return redirect('helpersapp:dashboard')
+         messages.error(request, "No helper has been assigned to this request yet.")
+         Notification.objects.create(
+        user=service_request.user, # Notify the Requester
+        title="No Helper Assigned",
+        message=f"No helper has been assigned to your request for {service_request.subcategory} yet.",
+        link=f"/user/request/{service_request.id}/" # Link to details
+        )
+         return redirect('helpersapp:dashboard')
 
     chat_messages = ChatMessage.objects.filter(service_request=service_request)
     

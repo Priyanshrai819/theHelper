@@ -17,6 +17,9 @@ urlpatterns = [
     path('api/send-message/<int:request_id>/', views.send_chat_message, name='send_chat_message'),
 
 
+    path('api/notifications/', views.get_notifications, name='get_notifications'),
+    path('api/notifications/read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
+
     # --- PAYMENT URLs ---
     path('payment/options/<int:request_id>/', views.payment_options_view, name='payment_options'),
     path('payment/initiate/<int:request_id>/', views.initiate_payment, name='initiate_payment'),

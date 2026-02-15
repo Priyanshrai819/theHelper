@@ -31,4 +31,7 @@ urlpatterns = [
     # 3. Handle app-specific URLs under prefixes
     path('user/', include('helpersapp.urls')),
     path('helper/', include('helpers.urls')),
+    # Add this line for allauth URLs (e.g., /accounts/google/login/)
+    path('accounts/', include('allauth.urls')),
+    
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

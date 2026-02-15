@@ -56,25 +56,26 @@
             <div class="relative">
               <button class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-primary transition-colors relative">
                 <i class="ri-notification-3-line ri-lg"></i>
-                <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">0</span>
               </button>
             </div>
            <div class="flex items-center space-x-2">
-    <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
-        {% if user.profile_image %}
-            <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover" alt="Profile Image">
-        {% else %}
-            <span class="text-white text-sm font-medium">
-                {{ user.fname|first|upper }}{{ user.lname|first|upper }}
-            </span>
-        {% endif %}
-    </div>
-    <span class="text-sm text-gray-700">{{ user.fname }} {{ user.lname }}</span>
-    
-    <a href="{% url 'helpersapp:logout' %}" class="w-4 h-4 flex items-center justify-center text-gray-500">
-        <i class="ri-logout-box-r-line"></i>
-    </a>
-</div>
+              <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+                  {% if user.profile_image %}
+                      <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover" alt="Profile Image">
+                  {% else %}
+                      <span class="text-white text-sm font-medium">
+                          {{ user.fname|first|upper }}{{ user.lname|first|upper }}
+                      </span>
+                  {% endif %}
+              </div>
+              <span class="text-sm text-gray-700">{{ user.fname }} {{ user.lname }}</span>
+              
+              <!-- CORRECTED LOGOUT LINK -->
+              <a href="{% url 'helpersapp:logout' %}" class="w-4 h-4 flex items-center justify-center text-gray-500">
+                <i class="ri-logout-box-r-line"></i>
+              </a>
+          </div>
           </div>
         </div>
       </div>
@@ -216,20 +217,138 @@
         </div>
       </div>
     </main>
-    <div id="notification-toast" class="fixed top-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-50">
-      <div class="flex items-start space-x-3">
-        <div class="w-6 h-6 flex items-center justify-center bg-green-100 rounded-full flex-shrink-0">
-          <i class="ri-check-line text-green-600"></i>
-        </div>
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">Request Updated</p>
-          <p class="text-sm text-gray-600 mt-1">Your furniture assembly request has been accepted by Mike Johnson.</p>
-        </div>
-        <button class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600" onclick="hideNotification()">
-          <i class="ri-close-line"></i>
-        </button>
-      </div>
-    </div>
+    <!-- Notification Toast -->
+    <!-- 1. TOASTER MESSAGES (Django Messages - Temporary) -->
+<div id="toast-container" class="fixed top-20 right-5 z-[100] flex flex-col gap-3">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="toast-item flex items-center p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-lg border-l-4 
+                {% if message.tags == 'success' %} border-green-500 {% elif message.tags == 'error' %} border-red-500 {% else %} border-blue-500 {% endif %} animate-slide-in" role="alert">
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 
+                    {% if message.tags == 'success' %} text-green-500 bg-green-100 {% elif message.tags == 'error' %} text-red-500 bg-red-100 {% else %} text-blue-500 bg-blue-100 {% endif %} rounded-lg">
+                    <i class="{% if message.tags == 'success' %} ri-checkbox-circle-fill {% elif message.tags == 'error' %} ri-error-warning-fill {% else %} ri-information-fill {% endif %}"></i>
+                </div>
+                <div class="ml-3 text-sm font-normal">{{ message }}</div>
+                <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg p-1.5 inline-flex h-8 w-8" onclick="this.parentElement.remove()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<!-- 2. NOTIFICATION DROPDOWN SCRIPT -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Toast Auto-Hide ---
+        const toasts = document.querySelectorAll('.toast-item');
+        toasts.forEach(t => {
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(20px)';
+                t.style.transition = 'all 0.5s ease';
+                setTimeout(() => t.remove(), 500);
+            }, 5000);
+        });
+
+        // --- Notification Handling ---
+        const bellBtn = document.querySelector('.ri-notification-3-line').parentElement;
+        const badge = bellBtn.querySelector('span');
+        
+        // Ensure dropdown exists
+        let dropdown = document.getElementById('notif-dropdown');
+        if (!dropdown) {
+            dropdown = document.createElement('div');
+            dropdown.id = 'notif-dropdown';
+            dropdown.className = 'absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 hidden z-50 overflow-hidden';
+            dropdown.innerHTML = `
+                <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
+                    <span class="font-semibold text-sm">Notifications</span>
+                    <button id="mark-all-read" class="text-[10px] text-primary hover:underline">Mark all read</button>
+                </div>
+                <div id="notification-list" class="max-h-64 overflow-y-auto">
+                    <div class="p-8 text-center text-gray-500 text-sm">Loading...</div>
+                </div>
+            `;
+            bellBtn.parentElement.appendChild(dropdown);
+        }
+
+        const listContainer = document.getElementById('notification-list');
+
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/user/api/notifications/');
+                const data = await response.json();
+                
+                if (data.count > 0) {
+                    badge.textContent = data.count;
+                    badge.classList.remove('hidden');
+                    badge.classList.add('flex');
+                    
+                    listContainer.innerHTML = data.notifications.map(n => `
+                        <div class="p-3 border-b hover:bg-blue-50 cursor-pointer transition-colors relative group" onclick="markRead(${n.id}, '${n.link}')">
+                            <div class="flex justify-between items-start">
+                                <p class="text-sm font-bold text-gray-800">${n.title}</p>
+                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            </div>
+                            <p class="text-xs text-gray-600 line-clamp-2 mt-1">${n.message}</p>
+                            <p class="text-[10px] text-gray-400 mt-2">${n.created_at}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    badge.classList.add('hidden');
+                    badge.classList.remove('flex');
+                    listContainer.innerHTML = `
+                        <div class="p-8 text-center text-gray-500">
+                            <i class="ri-notification-off-line text-3xl block mb-2 opacity-20"></i>
+                            <p class="text-sm">All caught up!</p>
+                        </div>`;
+                }
+            } catch (err) {
+                console.error("Notif Error:", err);
+            }
+        }
+
+        bellBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            fetchNotifications();
+        });
+
+        document.addEventListener('click', () => dropdown.classList.add('hidden'));
+        
+        // Initial Fetch
+        fetchNotifications();
+        // Poll every 20 seconds for new database notifications
+        setInterval(fetchNotifications, 20000);
+    });
+
+    async function markRead(id, link) {
+        await fetch(`/user/api/notifications/read/${id}/`);
+        if (link && link !== 'None' && link !== '') {
+            window.location.href = link;
+        } else {
+            location.reload(); // Refresh to update badge if no link
+        }
+    }
+</script>
+
+<style>
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .animate-slide-in { animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+</style>
+
+
+
+
+
+
+
+
+
     <script id="tab-functionality">
       document.addEventListener('DOMContentLoaded', function() {
         const tabButtons = document.querySelectorAll('.tab-button');
@@ -262,7 +381,7 @@
         }
       }
     </script>
-    <script id="notification-system">
+    <!-- <script id="notification-system">
       function showNotification(message, type = 'success') {
         const toast = document.getElementById('notification-toast');
         const icon = toast.querySelector('i');
@@ -292,6 +411,6 @@
       setTimeout(() => {
         // showNotification( {{request.message}},{{request.msgtype}} ); // Assuming request.message and request.type are available
       }, 2000);
-    </script>
+    </script> -->
   </body>
 </html>

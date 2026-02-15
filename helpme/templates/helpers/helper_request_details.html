@@ -63,7 +63,27 @@
                         <p class="text-gray-600 leading-relaxed">{{ request.special_requirements|default:"None provided." }}</p>
                     </div>
                 </div>
-                <div class="space-y-6">
+                
+            </div>
+            <br>
+            <!-- ATTACHED PHOTOS SECTION - START -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Attached Photos</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            {% for photo in request.photos.all %}
+                                <a href="{{ photo.image.url }}" target="_blank">
+                                    <img src="{{ photo.image.url }}" alt="Request photo" class="w-full h-32 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                                </a>
+                            {% empty %}
+                                <p class="text-gray-500 col-span-full">No photos were attached to this request.</p>
+                            {% endfor %}
+                        </div>
+                        <br><br>
+                    </div>
+                    <!-- ATTACHED PHOTOS SECTION - END -->
+
+
+            <div class="space-y-6">
                     <div class="bg-gray-50 p-6 rounded-lg border">
                         <h3 class="font-semibold text-gray-800 mb-4">Details</h3>
                         <div class="space-y-4 text-sm">
@@ -75,8 +95,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
             <!-- Action Buttons -->
             <div class="border-t border-gray-200 mt-8 pt-6">
                 <div class="flex items-center space-x-4">

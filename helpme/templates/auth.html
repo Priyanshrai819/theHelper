@@ -1,3 +1,5 @@
+{% load socialaccount %}
+{% providers_media_js %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -187,16 +189,15 @@
                             <span class="px-2 bg-white text-gray-500">Or continue with</span>
                         </div>
                     </div>
-                    <div class="mt-6 grid grid-cols-3 gap-3">
-                        <button class="social-btn w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-button bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <i class="ri-google-fill text-red-500"></i>
-                        </button>
-                        <button class="social-btn w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-button bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <div class="mt-6 grid grid-cols-2 gap-2">
+                        <a href="{% provider_login_url 'google' %}" class="social-btn w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-button bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            <i class="ri-google-fill text-red-500 text-lg mr-2"></i>
+                            Sign in with Google
+                        </a>
+                        <a href="{% provider_login_url "facebook" %}" class="social-btn w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-button bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                            <i class="ri-facebook-fill text-blue-600"></i>
-                        </button>
-                        <button class="social-btn w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-button bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                            <i class="ri-apple-fill text-gray-900"></i>
-                        </button>
+                            Sign in with Facebook
+                        </a>
                     </div>
                 </div>
                 <div class="text-center mt-6">

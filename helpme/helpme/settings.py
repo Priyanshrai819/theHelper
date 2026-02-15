@@ -27,6 +27,8 @@ SECRET_KEY = 'django-insecure-w&o@418=ibk%w2_kmzumjt1c)y^(+xnd$#y^n-@2d560754l_7
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    'thehelpers.qzz.io',
+    'qzz.io',
     'localhost',
     '127.0.0.1'
 ]
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'helpersapp',  # Ensure your app is listed here
     'helpers',
     'django.contrib.sites', # Required by allauth
@@ -49,6 +52,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google', # For Google-specific login
+    'allauth.socialaccount.providers.facebook', # For Facebook-specific login
 ]
 
 MIDDLEWARE = [
@@ -59,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware",  #add this
 ]
 
 ROOT_URLCONF = 'helpme.urls'
@@ -170,6 +175,10 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+# # Tell allauth to use our custom adapter
+# SOCIALACCOUNT_ADAPTER = 'helpersapp.adapters.CustomSocialAccountAdapter'
+
+
 # --- Login/Logout Redirect URLs ---
 # After a user logs in (with Google or password), they go to the user dashboard
 LOGIN_REDIRECT_URL = '/user/dashboard/'
@@ -187,11 +196,64 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         'AUTH_PARAMS': {
             'access_type': 'online',
-        }
+        },
+        
+    # --- END OF BLOCK ---
+    },
+    # --- ADD THIS ENTIRE BLOCK ---
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SDK_URL': '//connect.facebook.net/{locale}/sdk.js',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'first_name',
+            'last_name',
+            'email',
+            'picture',
+        ],
+        'EXCHANGE_TOKEN': True,
+        'LOCALE_FUNC': lambda request: 'en_US',
+        'VERIFIED_EMAIL': False,
+        'VERSION': 'v13.0',
     }
 }
+
+
+
+# SOCIALACCOUNT_PROVIDERS = {
+#     'facebook': {
+#         'METHOD': 'oauth2',  # Set to 'js_sdk' to use the Facebook connect SDK
+#         'SDK_URL': '//connect.facebook.net/{locale}/sdk.js',
+#         'SCOPE': ['email', 'public_profile'],
+#         'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+#         'INIT_PARAMS': {'cookie': True},
+#         'FIELDS': [
+#             'id',
+#             'first_name',
+#             'last_name',
+#             'middle_name',
+#             'name',
+#             'name_format',
+#             'picture',
+#             'short_name'
+#         ],
+#         'EXCHANGE_TOKEN': True,
+#         'LOCALE_FUNC': 'path.to.callable',
+#         'VERIFIED_EMAIL': False,
+#         'VERSION': 'v13.0',
+#         'GRAPH_API_URL': 'https://graph.facebook.com/v13.0',
+#     }
+# }
+
+
+# This tells Django that Cloudflare is handling the HTTPS part
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Optional: To prevent conflicts if you have users with the same email
 # as a helper. This tells allauth to use the standard signup form.
 SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_EMAIL_VERIFICATION = 'none' # Or 'mandatory' if you want email verification
+SOCIALACCOUNT_LOGIN_ON_GET=True
