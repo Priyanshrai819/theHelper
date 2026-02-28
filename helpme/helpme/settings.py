@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w&o@418=ibk%w2_kmzumjt1c)y^(+xnd$#y^n-@2d560754l_7'
+SECRET_KEY = 'django-secret-key'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -159,8 +159,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Ensure the media directory exists
 
 
-RAZORPAY_API_KEY = 'rzp_test_R7cvN9zPNpncsQ'
-RAZORPAY_API_SECRET = 'EH9d0y9Zfh1wBMDGMmnmpsyN'
+RAZORPAY_API_KEY = 'api-key'
+RAZORPAY_API_SECRET = 'api-secret'
 
 
 
@@ -185,10 +185,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # Replace these with your actual email and app password
-EMAIL_HOST_USER = 'priyanshrai819@gmail.com' 
-EMAIL_HOST_PASSWORD = 'dqdm lsud rhpj dhro' 
+EMAIL_HOST_USER = 'host-email-address' 
+EMAIL_HOST_PASSWORD = 'host-password' 
 
-DEFAULT_FROM_EMAIL = 'theHelpers <no-reply@thehelpers.qzz.io>'
+DEFAULT_FROM_EMAIL = 'theHelpers<no-reply@thehelpers.qzz.io>'
 
 
 
