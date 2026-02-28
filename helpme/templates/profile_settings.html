@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings - theHelpers</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#3B82F6',
+              secondary: '#10B981'
+            },
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center space-x-4">
+            <a href="{% url 'helpersapp:dashboard' %}" class="flex items-center space-x-2 text-gray-600 hover:text-primary transition-colors">
+              <i class="ri-arrow-left-line"></i>
+              <span class="text-sm font-medium">Back to Dashboard</span>
+            </a>
+            <div class="w-px h-6 bg-gray-300"></div>
+            <h1 class="text-2xl font-['Pacifico'] text-primary">theHelpers</h1>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-xl font-bold text-gray-900">Profile Settings</h2>
+                <p class="text-sm text-gray-500">Update your personal information</p>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+                {% csrf_token %}
+                
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-50 text-green-700{% else %}bg-red-50 text-red-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Profile Image -->
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="relative group cursor-pointer" id="upload-trigger">
+                        <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100" id="preview-container">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                    <i class="ri-user-fill text-4xl"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="ri-camera-line text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <input type="file" name="profile_image" id="profile_image" class="hidden" accept="image/*">
+                    <button type="button" onclick="document.getElementById('profile_image').click()" class="text-sm text-primary font-medium hover:text-blue-700">Change Photo</button>
+                </div>
+
+                <!-- Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                        <input type="text" name="fname" value="{{ user.fname }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                        <input type="text" name="lname" value="{{ user.lname }}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <input type="email" value="{{ user.email }}" disabled class="w-full px-4 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-500 cursor-not-allowed">
+                    <p class="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-3">
+                    <a href="{% url 'helpersapp:dashboard' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors">Cancel</a>
+                    <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 font-medium transition-colors shadow-sm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Image Preview Script
+        document.getElementById('upload-trigger').addEventListener('click', () => {
+            document.getElementById('profile_image').click();
+        });
+
+        document.getElementById('profile_image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const container = document.getElementById('preview-container');
+                    container.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

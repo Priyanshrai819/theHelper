@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Services - theHelpers</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+</head>
+<body class="bg-gray-50 font-sans antialiased text-gray-900">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="{% url 'helpersapp:options' %}" class="text-2xl font-['Pacifico'] text-blue-500">theHelpers</a>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="{% url 'helpersapp:how_it_works' %}" class="text-gray-600 hover:text-blue-500 transition-colors">How it Works</a>
+                    <a href="{% url 'helpersapp:services' %}" class="text-blue-500 font-medium">Services</a>
+                    <a href="{% url 'helpersapp:about' %}" class="text-gray-600 hover:text-blue-500 transition-colors">About</a>
+                    <a href="{% url 'helpersapp:contact' %}" class="text-gray-600 hover:text-blue-500 transition-colors">Contact</a>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'helpersapp:auth' %}" class="text-gray-600 hover:text-blue-500 font-medium text-sm">Log in</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">Everyday help, on demand.</h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Explore our wide range of services designed to make your life easier.</p>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Service Item -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-14 h-14 mx-auto bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="ri-home-smile-line"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Home Cleaning</h3>
+                </div>
+                <!-- Service Item -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-14 h-14 mx-auto bg-green-50 text-green-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="ri-tools-line"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Plumbing</h3>
+                </div>
+                <!-- Service Item -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-14 h-14 mx-auto bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="ri-flashlight-line"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Electrical</h3>
+                </div>
+                <!-- Service Item -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-14 h-14 mx-auto bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="ri-truck-line"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Moving & Packing</h3>
+                </div>
+                <!-- Service Item -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-14 h-14 mx-auto bg-orange-50 text-orange-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="ri-hammer-line"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Handyman</h3>
+                </div>
+                <!-- Service Item -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-14 h-14 mx-auto bg-pink-50 text-pink-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="ri-leaf-line"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Yard Work</h3>
+                </div>
+                <!-- Service Item -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-14 h-14 mx-auto bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="ri-computer-line"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Tech Support</h3>
+                </div>
+                <!-- Service Item -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-14 h-14 mx-auto bg-red-50 text-red-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="ri-paint-brush-line"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800">Painting</h3>
+                </div>
+            </div>
+            
+            <div class="mt-16 text-center">
+                 <a href="{% url 'helpersapp:auth' %}" class="inline-flex items-center text-blue-600 font-bold hover:text-blue-800 transition-colors text-lg">
+                    Don't see what you need? Post a custom task <i class="ri-arrow-right-line ml-2"></i>
+                 </a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

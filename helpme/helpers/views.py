@@ -1,12 +1,235 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password, check_password
-from helpersapp.models import ServiceRequest  # Assuming Helper model is in helpersapp
+from helpersapp.models import User,ServiceRequest  # Assuming Helper model is in helpersapp
 from helpersapp.models import Notification as UserNotification
 from django.contrib import messages
-from .models import Helper, JobApplication,Notification
+from .models import Helper, JobApplication,Notification,PasswordResetToken
 from django.db.models import Sum
 import random
 from django.http import JsonResponse
+from helpersapp.models import ChatMessage, ServiceRequest, Notification
+
+from django.conf import settings
+
+# from django.core.mail import send_mail
+
+# from django.urls import reverse
+
+
+
+
+
+
+# def forgot_password_view(request):
+#     """
+#     Handles the request to send a password reset link to the user's email.
+#     """
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+        
+#         # 1. Check if email exists in either the User or Helper tables
+#         user_exists = User.objects.filter(email=email).exists()
+#         helper_exists = Helper.objects.filter(email=email).exists()
+        
+#         if user_exists or helper_exists:
+#             # 2. Delete any existing unused tokens for this email to prevent spam
+#             PasswordResetToken.objects.filter(email=email).delete()
+            
+#             # 3. Create a new secure, random token
+#             token_obj = PasswordResetToken.objects.create(email=email)
+            
+#             # 4. Build the full URL for the reset link (e.g., http://127.0.0.1:8000/reset-password/<token>/)
+#             reset_url = request.build_absolute_uri(
+#                 reverse('helpersapp:reset_password', args=[token_obj.token])
+#             )
+            
+#             # 5. Send the Email
+#             try:
+#                 send_mail(
+#                     subject='Password Reset Request - theHelpers',
+#                     message=f'Hello,\n\nYou requested a password reset. Click the link below to set a new password:\n\n{reset_url}\n\nThis link will expire in 1 hour. If you did not request this, please ignore this email.',
+#                     from_email=settings.DEFAULT_FROM_EMAIL,
+#                     recipient_list=[email],
+#                     fail_silently=False,
+#                 )
+#             except Exception as e:
+#                 print(f"Error sending email: {e}")
+                
+#         # Always show a success message even if the email wasn't found (security best practice)
+#         messages.success(request, "If an account with that email exists, we have sent a password reset link to your inbox.")
+#         return redirect('helpersapp:forgot_password')
+        
+#     return render(request, 'forgot_password.html')
+
+
+# def reset_password_view(request, token):
+#     """
+#     Handles the actual password reset using the token from the email link.
+#     """
+#     # 1. Look up the token in the database
+#     token_obj = get_object_or_404(PasswordResetToken, token=token)
+    
+#     # 2. Check if the token is older than 1 hour
+#     if not token_obj.is_valid():
+#         messages.error(request, "This password reset link has expired. Please request a new one.")
+#         return redirect('helpersapp:forgot_password')
+        
+#     if request.method == 'POST':
+#         password = request.POST.get('password')
+#         confirm_password = request.POST.get('confirm_password')
+        
+#         # 3. Ensure passwords match
+#         if password != confirm_password:
+#             messages.error(request, "Passwords do not match.")
+#             return render(request, 'reset_password.html', {'token': token})
+            
+#         # 4. Hash the new password securely
+#         hashed_password = make_password(password)
+        
+#         # 5. Apply the new password to the correct account type (User or Helper)
+#         user = User.objects.filter(email=token_obj.email).first()
+#         if user:
+#             user.password = hashed_password
+#             user.save()
+            
+#         helper = Helper.objects.filter(email=token_obj.email).first()
+#         if helper:
+#             helper.password = hashed_password
+#             helper.save()
+            
+#         # 6. Delete the token so it cannot be reused
+#         token_obj.delete()
+        
+#         messages.success(request, "Your password has been reset successfully! You can now log in.")
+        
+#         # Redirect to the correct login page based on account type
+#         if helper:
+#             return redirect('helpers:helper_auth')
+#         return redirect('helpersapp:auth')
+        
+#     # Render the reset password HTML template you selected
+#     return render(request, 'reset_password.html', {'token': token})
+
+
+
+
+
+
+
+
+def helper_chat_view(request, request_id):
+    """
+    Displays the chat page for the Helper.
+    """
+    if 'helper_id' not in request.session:
+        return redirect('helpers:helper_auth')
+    
+    helper = get_object_or_404(Helper, id=request.session['helper_id'])
+    # Ensure the helper can only access chats for jobs they accepted
+    service_request = get_object_or_404(ServiceRequest, id=request_id, accepted_helper=helper)
+    
+    return render(request, 'helpers/helper_chat.html', {
+        'request': service_request,
+        'helper': helper,
+        'user': service_request.user
+    })
+
+def helper_get_chat_messages(request, request_id):
+    """
+    API endpoint to fetch chat messages for the Helper.
+    """
+    if 'helper_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+        
+    messages = ChatMessage.objects.filter(service_request_id=request_id).order_by('timestamp')
+    data = []
+    for msg in messages:
+        data.append({
+            'id': msg.id,
+            'text': msg.message,
+            # If sender_helper exists, it means "I" (the helper) sent it
+            'is_me': bool(msg.sender_helper), 
+            'sender_name': msg.sender_helper.fname if msg.sender_helper else msg.sender_user.fname,
+            'time': msg.timestamp.strftime('%I:%M %p')
+        })
+    return JsonResponse({'messages': data})
+
+def helper_send_chat_message(request, request_id):
+    """
+    API endpoint to send a new chat message from the Helper.
+    """
+    if request.method == 'POST' and 'helper_id' in request.session:
+        message_text = request.POST.get('message')
+        if message_text:
+            helper = get_object_or_404(Helper, id=request.session['helper_id'])
+            service_request = get_object_or_404(ServiceRequest, id=request_id, accepted_helper=helper)
+            
+            # Save the message to the database
+            ChatMessage.objects.create(
+                service_request=service_request,
+                sender_helper=helper,
+                message=message_text
+            )
+            
+            # Create a notification for the User (Requester)
+            Notification.objects.create(
+                user=service_request.user,
+                title="New Message from Helper",
+                message=f"{helper.fname} sent you a message regarding your {service_request.get_service_category_display()} request.",
+                link=f"/contact-helper/{service_request.id}/"
+            )
+            return JsonResponse({'status': 'success'})
+            
+    return JsonResponse({'status': 'error'}, status=400)
+
+
+
+
+
+def helper_profile_settings(request):
+    """
+    Allows the logged-in Helper to update their profile details.
+    """
+    # 1. Security Check: Ensure helper is logged in
+    if 'helper_id' not in request.session:
+        return redirect('helpers:helper_auth')
+    
+    # 2. Get the Helper Object
+    helper = get_object_or_404(Helper, id=request.session['helper_id'])
+    
+    # 3. Handle Form Submission (POST)
+    if request.method == 'POST':
+        try:
+            fname = request.POST.get('fname')
+            lname = request.POST.get('lname')
+            address = request.POST.get('address')
+            city = request.POST.get('city')
+            state = request.POST.get('state')
+            zip_code = request.POST.get('zip')
+            
+            # Update fields if data is provided
+            if fname: helper.fname = fname
+            if lname: helper.lname = lname
+            if address: helper.address = address
+            if city: helper.city = city
+            if state: helper.state = state
+            if zip_code: helper.zip = zip_code
+            
+            # Handle Profile Image Upload
+            if 'profile_image' in request.FILES:
+                helper.profile_image = request.FILES['profile_image']
+            
+            # Save changes to the database
+            helper.save()
+            
+            messages.success(request, "Profile updated successfully.")
+            return redirect('helpers:helper_profile_settings')
+            
+        except Exception as e:
+            messages.error(request, f"Error updating profile: {e}")
+
+    # 4. Render the page (GET request)
+    return render(request, 'helpers/helper_profile_settings.html', {'helper': helper})
 
 
 
@@ -126,6 +349,7 @@ def helper_auth(request):
                 if check_password(password, helper.password):
                     # Password is correct, create a session
                     request.session['helper_id'] = helper.id
+                    messages.success(request, f"Welcome back, {helper.fname}!") 
                     return redirect('helpers:helper_dashboard')
                 else:
                     # Password is incorrect
@@ -211,6 +435,7 @@ def logout(request):
     """
     if 'helper_id' in request.session:
         del request.session['helper_id']
+    request.session.flush()
     return redirect('helpers:helper_auth')
 
 
@@ -276,3 +501,9 @@ def accept_request(request, request_id):
         
     # 6. Redirect the helper back to their dashboard
     return redirect('helpers:helper_dashboard')
+
+
+
+
+
+

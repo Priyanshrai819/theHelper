@@ -175,6 +175,25 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+
+
+
+# --- REAL EMAIL CONFIGURATION ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com' # Use your email provider's SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# Replace these with your actual email and app password
+EMAIL_HOST_USER = 'priyanshrai819@gmail.com' 
+EMAIL_HOST_PASSWORD = 'dqdm lsud rhpj dhro' 
+
+DEFAULT_FROM_EMAIL = 'theHelpers <no-reply@thehelpers.qzz.io>'
+
+
+
+
+
 # # Tell allauth to use our custom adapter
 # SOCIALACCOUNT_ADAPTER = 'helpersapp.adapters.CustomSocialAccountAdapter'
 

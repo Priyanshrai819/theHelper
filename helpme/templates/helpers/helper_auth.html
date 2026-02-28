@@ -125,9 +125,9 @@
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">Helper Login</h2>
                     <p class="text-gray-600">Sign in to your helper account</p>
                 </div>
-                
-                <form class="space-y-6" method="POST">
                 {% csrf_token %}
+                <form class="space-y-6" method="POST">
+                
                     <div>
                         <label for="email" class="sr-only">Email address</label>
                         <div class="relative">
@@ -157,7 +157,7 @@
                             <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
                         </div>
                         <div class="text-sm">
-                            <a href="#" class="font-medium text-primary hover:text-blue-500">Forgot your password?</a>
+                            <a href="{% url 'helpersapp:forgot_password' %}" class="font-medium text-primary hover:text-blue-500">Forgot your password?</a>
                         </div>
                     </div>
                     <div>

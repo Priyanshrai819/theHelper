@@ -1,5 +1,7 @@
 from django.db import models
 from helpersapp.models import ServiceRequest # Import ServiceRequest from your user app
+import uuid
+from django.utils import timezone
 
 class Helper(models.Model):
     """
@@ -60,3 +62,21 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user or self.helper}: {self.title}"
+    
+
+# --- NEW PASSWORD RESET MODEL ---
+class PasswordResetToken(models.Model):
+    """
+    Stores temporary tokens for password resets. 
+    It links directly to the email so it works for both Users and Helpers.
+    """
+    email = models.EmailField()
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        # Token is valid for 1 hour (3600 seconds)
+        return (timezone.now() - self.created_at).total_seconds() < 3600
+
+    def __str__(self):
+        return f"Reset token for {self.email}"

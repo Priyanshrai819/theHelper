@@ -121,7 +121,18 @@
             <!-- Action Buttons -->
             <div class="border-t border-gray-200 mt-8 pt-6">
                 <div class="flex items-center space-x-4">
-                    <a href="#" class="text-secondary hover:text-green-600 text-sm font-medium">Contact Helper</a>
+                     <!-- PAY NOW BUTTON: Only shows when completed and payment is pending -->
+                    {% if request.payment_status == 'Pending' %}
+                        <a href="{% url 'helpersapp:payment_options' request.id %}" class="bg-primary hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm">
+                            <i class="ri-bank-card-line mr-1"></i> Pay Now
+                        </a>
+                    {% endif %}
+
+                    {% if request.accepted_helper %}
+                        <a href="{% url 'helpersapp:contact_helper' request.id %}" class="text-secondary hover:text-green-600 text-sm font-medium">
+                            <i class="ri-chat-3-line mr-1"></i> Contact Helper
+                        </a>
+                    {% endif %}
                     
                     {% if request.status == 'Pending' or request.status == 'Active' %}
                     <a href="{% url 'helpersapp:cancel_request' request.id %}" class="text-red-600 hover:text-red-700 text-sm font-medium">Cancel Request</a>

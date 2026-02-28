@@ -147,6 +147,8 @@
     </style>
   </head>
   <body class="bg-gray-50 min-h-screen">
+
+    
     <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
@@ -160,40 +162,44 @@
             <div class="w-px h-6 bg-gray-300"></div>
             <h1 class="text-2xl font-['Pacifico'] text-primary">theHelpers</h1>
           </div>
-          {% comment %} <nav class="hidden md:flex items-center space-x-8">
+          <nav class="hidden md:flex items-center space-x-8">
             <a href="#" class="text-gray-700 hover:text-primary transition-colors">How it Works</a>
             <a href="#" class="text-gray-700 hover:text-primary transition-colors">Services</a>
             <a href="#" class="text-gray-700 hover:text-primary transition-colors">About</a>
             <a href="#" class="text-gray-700 hover:text-primary transition-colors">Contact</a>
-          </nav> {% endcomment %}
+          </nav>
           <div class="flex items-center space-x-4">
             <div class="relative">
               <button class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-primary transition-colors relative">
                 <i class="ri-notification-3-line ri-lg"></i>
+                <!-- You can make this dynamic later with notification count logic -->
                 <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">0</span>
               </button>
             </div>
-           <div class="flex items-center space-x-2">
-              <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
-                  {% if current_user.profile_image %}
-                      <img src="{{ current_user.profile_image.url }}" class="w-full h-full object-cover" alt="Profile Image">
-                  {% else %}
-                      <span class="text-white text-sm font-medium">
-                          {{ current_user.fname|first|upper }}{{ current_user.lname|first|upper }}
-                      </span>
-                  {% endif %}
-              </div>
-              <span class="text-sm text-gray-700">{{ current_user.fname }} {{ current_user.lname }}</span>
-              
-              <!-- CORRECTED LOGOUT LINK -->
-              <a href="{% url 'helpersapp:logout' %}" class="w-4 h-4 flex items-center justify-center text-gray-500">
-                <i class="ri-logout-box-r-line"></i>
-              </a>
-          </div>
+            
+            <!-- User Profile Section -->
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+                    {% if user.profile_image %}
+                        <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover" alt="Profile Image">
+                    {% else %}
+                        <span class="text-white text-sm font-medium">
+                            {{ user.fname|first|upper }}{{ user.lname|first|upper }}
+                        </span>
+                    {% endif %}
+                </div>
+                <span class="text-sm text-gray-700">{{ user.fname }} {{ user.lname }}</span>
+                <a href="{% url 'helpersapp:logout' %}" class="w-4 h-4 flex items-center justify-center text-gray-500 hover:text-red-500">
+                    <i class="ri-logout-box-r-line"></i>
+                </a>
+            </div>
+
           </div>
         </div>
       </div>
     </header>
+
+
     <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="mb-8">
         <h2 class="text-3xl font-bold text-gray-900 mb-2">Create New Request</h2>

@@ -46,12 +46,12 @@
           <div class="flex items-center">
             <h1 class="text-2xl font-['Pacifico'] text-primary">theHelpers</h1>
           </div>
-          <nav class="hidden md:flex items-center space-x-8">
-            <a href="#" class="text-gray-700 hover:text-primary transition-colors">How it Works</a>
-            <a href="#" class="text-gray-700 hover:text-primary transition-colors">Services</a>
-            <a href="#" class="text-gray-700 hover:text-primary transition-colors">About</a>
-            <a href="#" class="text-gray-700 hover:text-primary transition-colors">Contact</a>
-          </nav>
+          {% comment %} <nav class="hidden md:flex items-center space-x-8">
+            <a href="{% url 'helpersapp:how_it_works' %}" class="text-gray-700 hover:text-primary transition-colors">How it Works</a>
+            <a href="{% url 'helpersapp:services' %}" class="text-gray-700 hover:text-primary transition-colors">Services</a>
+            <a href="{% url 'helpersapp:about' %}" class="text-gray-700 hover:text-primary transition-colors">About</a>
+            <a href="{% url 'helpersapp:contact' %}" class="text-gray-700 hover:text-primary transition-colors">Contact</a>
+          </nav> {% endcomment %}
           <div class="flex items-center space-x-4">
             <div class="relative">
               <button class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-primary transition-colors relative">
@@ -71,6 +71,11 @@
               </div>
               <span class="text-sm text-gray-700">{{ user.fname }} {{ user.lname }}</span>
               
+
+              <!-- NEW: Settings Button -->
+                <a href="{% url 'helpersapp:profile_settings' %}" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-primary hover:bg-blue-50 rounded-full transition-colors" title="Profile Settings">
+                    <i class="ri-settings-3-line text-lg"></i>
+                </a>
               <!-- CORRECTED LOGOUT LINK -->
               <a href="{% url 'helpersapp:logout' %}" class="w-4 h-4 flex items-center justify-center text-gray-500">
                 <i class="ri-logout-box-r-line"></i>
@@ -349,38 +354,128 @@
 
 
 
-    <script id="tab-functionality">
-      document.addEventListener('DOMContentLoaded', function() {
-        const tabButtons = document.querySelectorAll('.tab-button');
-        tabButtons.forEach(button => {
-          button.addEventListener('click', function() {
-            tabButtons.forEach(btn => {
-              btn.classList.remove('border-primary', 'text-primary', 'active');
-              btn.classList.add('border-transparent', 'text-gray-500');
-            });
-            this.classList.remove('border-transparent', 'text-gray-500');
-            this.classList.add('border-primary', 'text-primary', 'active');
-            filterRequests(this.textContent.trim());
-          });
-        });
-      });
-
-      function filterRequests(status) {
-        const container = document.getElementById('requests-container');
-        const requests = container.children;
-        for (let request of requests) {
-          const statusBadge = request.querySelector('.inline-flex');
-          const statusText = statusBadge.textContent.trim();
-          if (status === 'Active Requests') {
-            request.style.display = (statusText === 'In Progress' || statusText === 'Active' || statusText === 'Accepted' || statusText === 'Scheduled') ? 'block' : 'none';
-          } else if (status === 'Pending') {
-            request.style.display = statusText === 'Pending' ? 'block' : 'none';
-          } else if (status === 'Completed') {
-            request.style.display = statusText === 'Completed' ? 'block' : 'none';
-          }
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Selectors ---
+        const bellBtn = document.querySelector('.ri-notification-3-line').closest('button') || document.querySelector('.ri-notification-3-line').parentElement;
+        const badge = bellBtn.querySelector('span'); // The red counter span
+        
+        // --- Create Dropdown Structure ---
+        let dropdown = document.getElementById('bell-dropdown');
+        if (!dropdown) {
+            dropdown = document.createElement('div');
+            dropdown.id = 'bell-dropdown';
+            dropdown.className = 'absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 hidden z-50 overflow-hidden';
+            dropdown.innerHTML = `
+                <div class="p-3 border-b bg-gray-50 flex justify-between items-center">
+                    <span class="font-semibold text-sm text-gray-700">Notifications</span>
+                    <button id="mark-all-btn" class="text-xs text-primary hover:underline font-medium">Mark all as read</button>
+                </div>
+                <div id="notif-list" class="max-h-64 overflow-y-auto">
+                    <div class="p-8 text-center text-gray-400 text-sm">Loading...</div>
+                </div>
+            `;
+            // Ensure relative positioning on parent for dropdown placement
+            bellBtn.parentElement.style.position = 'relative';
+            bellBtn.parentElement.appendChild(dropdown);
         }
-      }
-    </script>
+
+        // --- Fetch & Update UI ---
+        async function updateNotifications() {
+            try {
+                const response = await fetch('/user/api/notifications/'); // Adjust if using helper specific URL prefix
+                const data = await response.json();
+                const list = document.getElementById('notif-list');
+                
+                // Update Badge Count
+                if (data.count > 0) {
+                    badge.textContent = data.count;
+                    badge.classList.remove('hidden');
+                    badge.classList.add('flex'); // Ensure flex is applied to center text
+                } else {
+                    badge.classList.add('hidden');
+                    badge.classList.remove('flex');
+                }
+
+                // Populate List
+                if (data.count > 0) {
+                    list.innerHTML = data.notifications.map(n => `
+                        <div class="p-3 border-b hover:bg-blue-50 cursor-pointer transition-colors relative" onclick="handleNotificationClick(${n.id}, '${n.link}')">
+                            <div class="flex justify-between items-start">
+                                <p class="text-sm font-bold text-gray-800">${n.title}</p>
+                                <span class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></span>
+                            </div>
+                            <p class="text-xs text-gray-600 line-clamp-2 mt-1">${n.message}</p>
+                            <span class="text-[10px] text-gray-400 mt-2 block">${n.created_at}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = `
+                        <div class="p-8 text-center text-gray-500">
+                            <i class="ri-notification-off-line text-2xl block mb-2 opacity-30"></i>
+                            <p class="text-sm">No new notifications</p>
+                        </div>`;
+                }
+            } catch (e) { 
+                console.error("Notification Error:", e); 
+            }
+        }
+
+        // --- Event Handlers ---
+        
+        // 1. Toggle Dropdown
+        bellBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            updateNotifications(); // Refresh on open
+        });
+
+        // 2. Hide on Click Outside
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && !bellBtn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // 3. Mark All as Read
+        document.getElementById('mark-all-btn').addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await fetch('/user/api/notifications/read-all/');
+            updateNotifications(); // This will clear the list and reset the badge to 0
+        });
+
+        // 4. Initial Load & Polling
+        updateNotifications();
+        setInterval(updateNotifications, 30000); // Check every 30s
+    });
+
+    // Global function to handle click
+    async function handleNotificationClick(id, link) {
+        // Mark as read
+        await fetch(`/user/api/notifications/read/${id}/`);
+        
+        // If there's a link, go there
+        if (link && link !== '#' && link !== '') {
+            window.location.href = link;
+        } else {
+            // Otherwise just refresh the list/badge
+            // We re-fetch instead of reload to keep it smooth
+            const badge = document.querySelector('.ri-notification-3-line').closest('button').querySelector('span');
+            const currentCount = parseInt(badge.textContent) || 0;
+            if (currentCount > 1) {
+                badge.textContent = currentCount - 1;
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+            // Remove the item from DOM visually
+            event.currentTarget.remove();
+            
+            // Or fully refresh list:
+            // location.reload(); 
+        }
+    }
+</script>
     <!-- <script id="notification-system">
       function showNotification(message, type = 'success') {
         const toast = document.getElementById('notification-toast');

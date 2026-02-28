@@ -13,21 +13,136 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
-
+import re
 
 # --- NEW: Import signals and Django's default User model ---
 from allauth.account.signals import user_logged_in
 from django.dispatch import receiver
 from django.contrib.auth.models import User as AuthUser
 
+from django.core.mail import send_mail
+
+from django.urls import reverse
+
+from .models import User, PasswordResetToken
+
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+
+
+def forgot_password_view(request):
+    """
+    Handles the request to send a password reset link to the user's email.
+    """
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        
+        # 1. Fetch the user or helper object (so we can get their name for the email)
+        user = User.objects.filter(email=email).first()
+        helper = Helper.objects.filter(email=email).first()
+        
+        if user or helper:
+            # 2. Delete any existing unused tokens for this email to prevent spam
+            PasswordResetToken.objects.filter(email=email).delete()
+            
+            # 3. Create a new secure, random token
+            token_obj = PasswordResetToken.objects.create(email=email)
+            
+            # 4. Build the full URL for the reset link (e.g., http://127.0.0.1:8000/reset-password/<token>/)
+            reset_url = request.build_absolute_uri(
+                reverse('helpersapp:reset_password', args=[token_obj.token])
+            )
+            
+            # Get the user's first name for the email greeting
+            user_name = user.fname if user else helper.fname
+            
+            # 5. Compile the HTML template with dynamic data
+            html_message = render_to_string('email/email_forget_password.html', {
+                'user_name': user_name.upper(), # Uppercase to match your design
+                'reset_url': reset_url
+            })
+            
+            # Create a plain text fallback for email clients that don't support HTML
+            plain_message = strip_tags(html_message)
+            
+            # 6. Send the Email
+            try:
+                send_mail(
+                    subject='Password Reset Request - theHelpers',
+                    message=plain_message, # Fallback text
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    html_message=html_message, # THIS RENDERS THE BEAUTIFUL HTML DESIGN
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"Error sending email: {e}")
+                
+        # Always show a success message even if the email wasn't found (security best practice)
+        messages.success(request, "If an account with that email exists, we have sent a password reset link to your inbox.")
+        return redirect('helpersapp:forgot_password')
+        
+    return render(request, 'forgot_password.html')
+
+def reset_password_view(request, token):
+    """
+    Handles the actual password reset using the token from the email link.
+    """
+    # 1. Gracefully handle invalid or used tokens to prevent 404 crashes
+    try:
+        token_obj = PasswordResetToken.objects.get(token=token)
+    except PasswordResetToken.DoesNotExist:
+        messages.error(request, "This password reset link is invalid or has already been used.")
+        return redirect('helpersapp:forgot_password')
+    
+    # 2. Check if the token is older than 1 hour
+    if not token_obj.is_valid():
+        messages.error(request, "This password reset link has expired. Please request a new one.")
+        return redirect('helpersapp:forgot_password')
+        
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        # 3. Ensure passwords match
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return render(request, 'reset_password.html', {'token': token})
+            
+        # 4. Hash the new password securely
+        hashed_password = make_password(password)
+        
+        # 5. Apply the new password to the correct account type (User or Helper)
+        user = User.objects.filter(email=token_obj.email).first()
+        if user:
+            user.password = hashed_password
+            user.save()
+            
+        helper = Helper.objects.filter(email=token_obj.email).first()
+        if helper:
+            helper.password = hashed_password
+            helper.save()
+            
+        # 6. Delete the token so it cannot be reused
+        token_obj.delete()
+        
+        messages.success(request, "Your password has been reset successfully! You can now log in.")
+        
+        # Redirect to the correct login page based on account type
+        if helper:
+            return redirect('helpers:helper_auth')
+        return redirect('helpersapp:auth')
+        
+    # Render the reset password HTML template you selected
+    return render(request, 'reset_password.html', {'token': token})
 
 
 
 
 
 
-
-def get_notifications(request):
+def get_notifications_api(request):
     """
     API to fetch unread notifications for the logged-in user or helper.
     """
@@ -44,7 +159,7 @@ def get_notifications(request):
         'id': n.id,
         'title': n.title,
         'message': n.message,
-        'link': n.link,
+        'link': n.link or '#',
         'created_at': n.created_at.strftime('%b %d, %H:%M')
     } for n in notifications]
     
@@ -54,13 +169,28 @@ def mark_notification_read(request, notification_id):
     """
     Marks a specific notification as read.
     """
-    notification = get_object_or_404(Notification, id=notification_id)
-    notification.is_read = True
-    notification.save()
+    # Try finding in User notifications first, then Helper
+    try:
+        notification = Notification.objects.get(id=notification_id)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'status': 'success'})
+    except Notification.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
+
+def mark_all_notifications_read(request):
+    """
+    Marks ALL unread notifications as read for the current user/helper.
+    """
+    user_id = request.session.get('user_id')
+    helper_id = request.session.get('helper_id')
+
+    if user_id:
+        Notification.objects.filter(user_id=user_id, is_read=False).update(is_read=True)
+    elif helper_id:
+        Notification.objects.filter(helper_id=helper_id, is_read=False).update(is_read=True)
+        
     return JsonResponse({'status': 'success'})
-
-
-
 
 
 
@@ -99,6 +229,49 @@ def user_logged_in_receiver(request, user, **kwargs):
 
 
 
+def profile_settings(request):
+    """
+    Allows the logged-in user (Requester) to update their profile details.
+    """
+    # 1. Security Check: Ensure user is logged in
+    if 'user_id' not in request.session:
+        return redirect('helpersapp:auth')
+    
+    # 2. Get the User Object
+    user = get_object_or_404(User, id=request.session['user_id'])
+    
+    # 3. Handle Form Submission (POST)
+    if request.method == 'POST':
+        try:
+            fname = request.POST.get('fname')
+            lname = request.POST.get('lname')
+            
+            # Update fields if data is provided
+            if fname: 
+                user.fname = fname
+            if lname: 
+                user.lname = lname
+            
+            # Handle Profile Image Upload
+            # request.FILES handles file uploads
+            if 'profile_image' in request.FILES:
+                user.profile_image = request.FILES['profile_image']
+            
+            # Save changes to the database
+            user.save()
+            
+            messages.success(request, "Profile updated successfully.")
+            return redirect('helpersapp:profile_settings')
+            
+        except Exception as e:
+            messages.error(request, f"Error updating profile: {e}")
+
+    # 4. Render the page (GET request)
+    return render(request, 'profile_settings.html', {'user': user})
+
+
+
+
 def verify_otp_view(request, request_id):
     """
     Verifies the OTP submitted by the helper.
@@ -131,8 +304,6 @@ def verify_otp_view(request, request_id):
 
 
 
-
-
 def auth(request):
     """
     Handles both user registration and login directly in the view
@@ -158,8 +329,11 @@ def auth(request):
                     user = User.objects.get(email=email)
                     if check_password(password, user.password):
                         request.session['user_id'] = user.id
-                        return redirect('helpersapp:dashboard')
                         
+                        # --- CORRECT PLACE: Only runs once on successful login ---
+                        messages.success(request, f"Welcome back, {user.fname}!") 
+                        
+                        return redirect('helpersapp:dashboard')
                     else:
                         login_errors['general'] = 'Invalid email or password.'
                 except User.DoesNotExist:
@@ -174,8 +348,19 @@ def auth(request):
             profile_image = request.FILES.get('profile_image')
 
             # --- Registration Validation ---
-            if not fname: register_errors['firstName'] = 'First name is required.'
-            if not lname: register_errors['lastName'] = 'Last name is required.'
+            
+            # Strict Name Validation (Letters Only)
+            if not fname: 
+                register_errors['firstName'] = 'First name is required.'
+            elif not re.match(r'^[a-zA-Z]+$', fname):
+                register_errors['firstName'] = 'First name can only contain letters (A-Z).'
+
+            if not lname: 
+                register_errors['lastName'] = 'Last name is required.'
+            elif not re.match(r'^[a-zA-Z]+$', lname):
+                register_errors['lastName'] = 'Last name can only contain letters (A-Z).'
+
+            # Email Validation
             if not email:
                 register_errors['email'] = 'Email is required.'
             else:
@@ -200,6 +385,7 @@ def auth(request):
                     profile_image=profile_image
                 )
                 request.session['user_id'] = user.id
+                messages.success(request, f'Welcome, {user.fname}! Your account has been created.')
                 return redirect('helpersapp:dashboard')
 
     # For a GET request or if there are errors, render the page
@@ -208,7 +394,6 @@ def auth(request):
         'register_errors': register_errors,
         'old_input': request.POST if request.method == 'POST' else {}
     })
-
 
 def dashboard(request):
     """
@@ -219,12 +404,6 @@ def dashboard(request):
 
     try:
         user = User.objects.get(id=request.session['user_id'])
-        Notification.objects.create(
-            user=user,
-            title="Login Successful",
-            message="You have successfully logged in to your dashboard.",
-            link="/user/dashboard/"
-        )
         
         # Get all requests for the user
         all_requests = ServiceRequest.objects.filter(user=user)
@@ -234,10 +413,11 @@ def dashboard(request):
         pending_requests_count = all_requests.filter(status='Pending').count()
         completed_requests_count = all_requests.filter(status='Completed').count()
         
+        # Calculate total spent from completed requests
         total_spent = 0
         completed_requests = all_requests.filter(status='Completed')
         for req in completed_requests:
-            if req.budget: # Only add if budget has a value
+            if req.budget:
                 total_spent += req.budget
 
         context = {
@@ -254,16 +434,13 @@ def dashboard(request):
         del request.session['user_id']
         return redirect('helpersapp:auth')
 
-
 def logout(request):
     """
-    Logs the user out by clearing the session.
+    Logs the user out by clearing the entire session.
+    This ensures all messages (toasts) and session data are removed.
     """
-    if 'user_id' in request.session:
-        del request.session['user_id']
-    from django.contrib.auth import logout as auth_logout
-    auth_logout(request)
-    return redirect('options')
+    request.session.flush()
+    return redirect('helpersapp:auth')
 
 
 
@@ -271,82 +448,72 @@ def request_help(request):
     """
     Handles the multi-step form for creating a new ServiceRequest.
     """
-
-    # This view assumes the user must be logged in.
-    # A @login_required decorator would be ideal here.
+    # 1. Check if user is logged in
     if 'user_id' not in request.session:
-        return redirect('helpersapp:auth') # Redirect to your login page
+        return redirect('helpersapp:auth')
+
+    # 2. Fetch the user object to display name/profile in header
+    try:
+        user = User.objects.get(id=request.session['user_id'])
+    except User.DoesNotExist:
+        del request.session['user_id']
+        return redirect('helpersapp:auth')
 
     if request.method == 'POST':
         try:
-            # --- Get the logged-in user ---
-            current_user = User.objects.get(id=request.session['user_id'])
-
-            # --- Step 1: Service Details ---
+            # --- Get Data from Form ---
             service_category = request.POST.get('service_category')
             subcategory = request.POST.get('subcategory')
             task_description = request.POST.get('task_description')
-            
-            # --- Step 2: Location & Schedule ---
             address = request.POST.get('address')
             preferred_date = request.POST.get('preferred_date')
             preferred_time = request.POST.get('preferred_time')
-            is_flexible = 'is_flexible' in request.POST
-            is_urgent = 'is_urgent' in request.POST
-            has_parking = 'has_parking' in request.POST
-
-            # --- Step 3: Budget & Requirements ---
-            payment_type = request.POST.get('payment_type')
             budget = request.POST.get('budget')
+            payment_type = request.POST.get('payment_type')
             special_requirements = request.POST.get('special_requirements')
-            helper_brings_tools = 'helper_brings_tools' in request.POST
-            background_check_required = 'background_check_required' in request.POST
-            insurance_needed = 'insurance_needed' in request.POST
-            experience_required = 'experience_required' in request.POST
 
             # --- Create the ServiceRequest instance ---
             new_request = ServiceRequest.objects.create(
-                user=current_user,
+                user=user,
                 service_category=service_category,
                 subcategory=subcategory,
                 task_description=task_description,
                 address=address,
                 preferred_date=preferred_date,
                 preferred_time=preferred_time,
-                is_flexible=is_flexible,
-                is_urgent=is_urgent,
-                has_parking=has_parking,
+                is_flexible='is_flexible' in request.POST,
+                is_urgent='is_urgent' in request.POST,
+                has_parking='has_parking' in request.POST,
                 payment_type=payment_type,
                 budget=budget,
                 special_requirements=special_requirements,
-                helper_brings_tools=helper_brings_tools,
-                background_check_required=background_check_required,
-                insurance_needed=insurance_needed,
-                experience_required=experience_required,
-                status='Pending' # Default status
+                helper_brings_tools='helper_brings_tools' in request.POST,
+                background_check_required='background_check_required' in request.POST,
+                insurance_needed='insurance_needed' in request.POST,
+                experience_required='experience_required' in request.POST,
+                status='Pending'
             )
 
             # --- Handle multiple photo uploads ---
-            uploaded_images = request.FILES.getlist('photos') # 'photos' is the name of your file input
+            uploaded_images = request.FILES.getlist('photos')
             for image in uploaded_images:
                 RequestPhoto.objects.create(
                     service_request=new_request,
                     image=image
                 )
             
-            # --- REDIRECT TO PAYMENT OPTIONS INSTEAD OF DASHBOARD ---
+            messages.success(request, 'Your help request has been submitted successfully!')
+            
+            # Redirect to the payment options page
             return redirect('helpersapp:payment_options', request_id=new_request.id)
-        
 
         except Exception as e:
-            # Handle potential errors, e.g., user not found or invalid data
             messages.error(request, f"An error occurred: {e}")
-            return render(request, 'request_help.html', {'user': current_user}) # Re-render the form page with an error
+            # Ensure 'user' is passed back even on error so header doesn't break
+            return render(request, 'request_help.html', {'user': user})
 
-    
-    _user = User.objects.get(id=request.session['user_id'])
-    # For a GET request, just display the form
-    return render(request, 'request_help.html', {'user': _user})
+    # 3. Pass the user object to the template for GET requests
+    return render(request, 'request_help.html', {'user': user})
 
 
 
@@ -575,42 +742,40 @@ def contact_helper(request, request_id):
         return redirect('helpersapp:auth')
     
     service_request = get_object_or_404(ServiceRequest, id=request_id, user_id=request.session['user_id'])
+    user = get_object_or_404(User, id=request.session['user_id'])
     
-    # A user can only contact the helper if one has been accepted
     if not service_request.accepted_helper:
-         messages.error(request, "No helper has been assigned to this request yet.")
-         Notification.objects.create(
-        user=service_request.user, # Notify the Requester
-        title="No Helper Assigned",
-        message=f"No helper has been assigned to your request for {service_request.subcategory} yet.",
-        link=f"/user/request/{service_request.id}/" # Link to details
-        )
-         return redirect('helpersapp:dashboard')
+        messages.error(request, "No helper has been assigned to this request yet.")
+        return redirect('helpersapp:dashboard')
 
-    chat_messages = ChatMessage.objects.filter(service_request=service_request)
-    
-    context = {
+    return render(request, 'contact_helper.html', {
         'request': service_request,
         'helper': service_request.accepted_helper,
-        'chat_messages': chat_messages
-    }
-    return render(request, 'contact_helper.html', context)
+        'user': user
+    })
 
 def get_chat_messages(request, request_id):
     """
-    API endpoint to fetch chat messages as JSON for real-time updates.
+    API endpoint to fetch chat messages for the User.
     """
-    chat_messages = ChatMessage.objects.filter(service_request_id=request_id).values(
-        'message', 
-        'timestamp', 
-        'sender_user__fname', 
-        'sender_helper__fname'
-    )
-    return JsonResponse(list(chat_messages), safe=False)
+    if 'user_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+        
+    messages = ChatMessage.objects.filter(service_request_id=request_id).order_by('timestamp')
+    data = []
+    for msg in messages:
+        data.append({
+            'id': msg.id,
+            'text': msg.message,
+            'is_me': bool(msg.sender_user), # True if sent by User, False if by Helper
+            'sender_name': msg.sender_user.fname if msg.sender_user else msg.sender_helper.fname,
+            'time': msg.timestamp.strftime('%I:%M %p')
+        })
+    return JsonResponse({'messages': data})
 
 def send_chat_message(request, request_id):
     """
-    API endpoint to handle sending a new chat message.
+    API endpoint to send a new chat message from the User.
     """
     if request.method == 'POST' and 'user_id' in request.session:
         message_text = request.POST.get('message')
@@ -623,6 +788,13 @@ def send_chat_message(request, request_id):
                 sender_user=user,
                 message=message_text
             )
+            # Create notification for the helper
+            Notification.objects.create(
+                helper=service_request.accepted_helper,
+                title="New Message",
+                message=f"{user.fname} sent you a message regarding the {service_request.get_service_category_display()} job.",
+                link=f"/helper/chat/{service_request.id}/"
+            )
             return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
 
@@ -633,7 +805,21 @@ def send_chat_message(request, request_id):
 
 
 
+def how_it_works_view(request):
+    return render(request, 'how_it_works.html')
 
+def services_view(request):
+    return render(request, 'services.html')
+
+def about_view(request):
+    return render(request, 'about.html')
+
+def contact_view(request):
+    if request.method == 'POST':
+        # In a real app, you would send an email here using send_mail()
+        messages.success(request, "Thank you for reaching out! We will get back to you within 24 hours.")
+        return redirect('helpersapp:contact')
+    return render(request, 'contact.html')
 
 
 

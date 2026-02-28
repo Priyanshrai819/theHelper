@@ -3,20 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat with Helper - theHelpers</title>
+    <title>Chat with User - theHelpers</title>
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: '#4285F4',
-              secondary: '#34A853'
-            },
-          }
-        }
-      }
-    </script>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
 </head>
@@ -26,13 +14,10 @@
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center space-x-4">
-            <a href="{% url 'helpersapp:dashboard' %}" class="flex items-center space-x-2 text-gray-600 hover:text-primary transition-colors">
+            <a href="{% url 'helpers:helper_dashboard' %}" class="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-colors">
               <i class="ri-arrow-left-line"></i>
               <span class="text-sm font-medium">Back to Dashboard</span>
             </a>
-          </div>
-          <div class="flex items-center">
-            <h1 class="text-xl font-['Pacifico'] text-primary">theHelpers</h1>
           </div>
         </div>
       </div>
@@ -40,30 +25,19 @@
 
     <main class="flex-1 max-w-6xl w-full mx-auto py-8 px-4 flex flex-col min-h-0">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 h-full">
-            <!-- Helper Profile Card -->
+            <!-- User Profile Card -->
             <div class="md:col-span-1 hidden md:block">
                 <div class="bg-white p-6 rounded-lg shadow">
                     <div class="flex flex-col items-center text-center">
-                        <div class="w-24 h-24 rounded-full overflow-hidden mb-4 bg-blue-100 flex items-center justify-center border-4 border-white shadow-sm">
-                            {% if helper.profile_image %}
-                                <img src="{{ helper.profile_image.url }}" class="w-full h-full object-cover">
+                        <div class="w-24 h-24 rounded-full overflow-hidden mb-4 bg-blue-100 flex items-center justify-center">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" class="w-full h-full object-cover">
                             {% else %}
-                                <span class="text-primary text-3xl font-bold">{{ helper.fname|first|upper }}{{ helper.lname|first|upper }}</span>
+                                <span class="text-blue-600 text-3xl font-bold">{{ user.fname|first|upper }}{{ user.lname|first|upper }}</span>
                             {% endif %}
                         </div>
-                        <h2 class="text-xl font-bold text-gray-800">{{ helper.fname }} {{ helper.lname }}</h2>
-                        <p class="text-sm text-gray-500 mt-1">Assigned Helper for "{{ request.get_service_category_display }}"</p>
-                        
-                        <div class="mt-6 w-full pt-6 border-t border-gray-100">
-                            <div class="flex items-center justify-center space-x-2 text-sm text-gray-600 mb-2">
-                                <i class="ri-map-pin-line text-primary"></i>
-                                <span>{{ request.address|truncatechars:30 }}</span>
-                            </div>
-                            <div class="flex items-center justify-center space-x-2 text-sm text-gray-600">
-                                <i class="ri-calendar-event-line text-primary"></i>
-                                <span>{{ request.preferred_date|date:"M d, Y" }} at {{ request.preferred_time }}</span>
-                            </div>
-                        </div>
+                        <h2 class="text-xl font-bold text-gray-800">{{ user.fname }} {{ user.lname }}</h2>
+                        <p class="text-sm text-gray-500">Requester for "{{ request.get_service_category_display }}"</p>
                     </div>
                 </div>
             </div>
@@ -72,31 +46,24 @@
             <div class="md:col-span-2 flex flex-col bg-white rounded-lg shadow h-full overflow-hidden">
                 <div class="p-4 border-b bg-gray-50 flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center md:hidden">
-                        {% if helper.profile_image %}
-                            <img src="{{ helper.profile_image.url }}" class="w-full h-full object-cover rounded-full">
-                        {% else %}
-                            <span class="text-primary font-bold">{{ helper.fname|first|upper }}</span>
-                        {% endif %}
+                        <span class="text-blue-600 font-bold">{{ user.fname|first|upper }}</span>
                     </div>
-                    <div>
-                        <h3 class="font-semibold text-gray-800">Chat with {{ helper.fname }}</h3>
-                        <p class="text-xs text-green-500 flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> Helper is assigned</p>
-                    </div>
+                    <h3 class="font-semibold text-gray-800">Chat with {{ user.fname }}</h3>
                 </div>
                 
                 <!-- Chat Window -->
                 <div id="chat-window" class="flex-1 p-6 space-y-4 overflow-y-auto bg-white">
-                    <div class="text-center text-xs text-gray-400 my-4">Chat started for {{ request.get_service_category_display }}</div>
                     <!-- Messages will be loaded here via AJAX -->
+                    <div class="text-center text-xs text-gray-400 my-4">Chat started for {{ request.get_service_category_display }}</div>
                 </div>
                 
                 <!-- Input Area -->
                 <div class="p-4 border-t bg-gray-50">
                     <form id="chat-form" class="flex items-center space-x-3">
                         {% csrf_token %}
-                        <input type="text" id="message-input" class="flex-1 w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-all" placeholder="Type your message..." autocomplete="off">
-                        <button type="submit" class="bg-primary text-white rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0 hover:bg-blue-600 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                            <i class="ri-send-plane-fill text-lg ml-1"></i>
+                        <input type="text" id="message-input" class="flex-1 w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Type your message..." autocomplete="off">
+                        <button type="submit" class="bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center flex-shrink-0 hover:bg-blue-600 transition-colors">
+                            <i class="ri-send-plane-fill text-lg"></i>
                         </button>
                     </form>
                 </div>
@@ -110,9 +77,9 @@
             const chatForm = document.getElementById('chat-form');
             const messageInput = document.getElementById('message-input');
             
-            // Django URL tags to hit the user-side endpoints
-            const fetchUrl = "{% url 'helpersapp:get_chat_messages' request.id %}";
-            const sendUrl = "{% url 'helpersapp:send_chat_message' request.id %}";
+            // Django URL tags ensure we hit the correct helper endpoints
+            const fetchUrl = "{% url 'helpers:helper_get_chat_messages' request.id %}";
+            const sendUrl = "{% url 'helpers:helper_send_chat_message' request.id %}";
 
             let lastMessageCount = 0;
 
@@ -126,19 +93,19 @@
                 
                 messages.forEach(msg => {
                     if (msg.is_me) {
-                        // My message (User) - Right side, Primary color (Blue)
+                        // My message (Helper) - Right side, Green/Secondary color
                         html += `
-                            <div class="flex justify-end fade-in">
-                                <div class="bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[75%] shadow-sm">
+                            <div class="flex justify-end">
+                                <div class="bg-green-500 text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[75%] shadow-sm">
                                     <p class="text-sm">${msg.text}</p>
-                                    <span class="text-[10px] text-blue-100 flex justify-end mt-1">${msg.time}</span>
+                                    <span class="text-[10px] text-green-100 flex justify-end mt-1">${msg.time}</span>
                                 </div>
                             </div>`;
                     } else {
-                        // Their message (Helper) - Left side, Gray
+                        // Their message (User) - Left side, Gray
                         html += `
-                            <div class="flex justify-start fade-in">
-                                <div class="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[75%] shadow-sm border border-gray-200">
+                            <div class="flex justify-start">
+                                <div class="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[75%] shadow-sm">
                                     <p class="text-sm">${msg.text}</p>
                                     <span class="text-[10px] text-gray-500 mt-1">${msg.time}</span>
                                 </div>
@@ -169,7 +136,6 @@
                 if (!message) return;
 
                 messageInput.value = ''; // Clear instantly for better UX
-                messageInput.focus();
 
                 const formData = new FormData();
                 formData.append('message', message);
@@ -186,21 +152,10 @@
                 }
             });
 
-            // Fetch messages on page load and then poll every 3 seconds
+            // Fetch messages on page load and then every 3 seconds
             fetchMessages();
             setInterval(fetchMessages, 3000);
         });
     </script>
-    <style>
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        /* Custom scrollbar for chat window */
-        #chat-window::-webkit-scrollbar { width: 6px; }
-        #chat-window::-webkit-scrollbar-track { background: transparent; }
-        #chat-window::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-    </style>
 </body>
 </html>
