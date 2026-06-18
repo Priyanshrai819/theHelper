@@ -125,9 +125,9 @@
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">Helper Login</h2>
                     <p class="text-gray-600">Sign in to your helper account</p>
                 </div>
-                {% csrf_token %}
+               
                 <form class="space-y-6" method="POST">
-                
+                 {% csrf_token %}
                     <div>
                         <label for="email" class="sr-only">Email address</label>
                         <div class="relative">
@@ -178,6 +178,7 @@
                     <h2 class="text-3xl font-bold text-gray-900 mb-2">Become a Helper</h2>
                     <p class="text-gray-600">Join our community and start earning</p>
                 </div>
+                
                 
                 <form class="space-y-6" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}

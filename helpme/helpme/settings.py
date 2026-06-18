@@ -21,12 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-secret-key'
+SECRET_KEY = 'django-insecure-w&o@418=ibk%w2_kmzumjt1c)y^(+xnd$#y^n-@2d560754l_7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    
     'thehelpers.qzz.io',
     'qzz.io',
     'localhost',
@@ -159,8 +160,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Ensure the media directory exists
 
 
-RAZORPAY_API_KEY = 'api-key'
-RAZORPAY_API_SECRET = 'api-secret'
+RAZORPAY_API_KEY = 'rzp_test_SfNAZbuC5AYJrF'
+RAZORPAY_API_SECRET = 'zK7gvlwTzeuufTQ6pTIWWiGR'
 
 
 
@@ -185,10 +186,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # Replace these with your actual email and app password
-EMAIL_HOST_USER = 'host-email-address' 
-EMAIL_HOST_PASSWORD = 'host-password' 
+EMAIL_HOST_USER = 'priyanshrai819@gmail.com' 
+EMAIL_HOST_PASSWORD = 'dqdm lsud rhpj dhro' 
 
-DEFAULT_FROM_EMAIL = 'theHelpers<no-reply@thehelpers.qzz.io>'
+DEFAULT_FROM_EMAIL = 'theHelpers <no-reply@thehelpers.qzz.io>'
 
 
 
@@ -273,6 +274,13 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Optional: To prevent conflicts if you have users with the same email
 # as a helper. This tells allauth to use the standard signup form.
+# 1. Use Email for login (Replaces ACCOUNT_AUTHENTICATION_METHOD)
+ACCOUNT_LOGIN_METHODS = {'email'}
+
+# 2. Define required fields (The '*' means required. Notice 'username' is NOT here!)
+# This replaces both ACCOUNT_EMAIL_REQUIRED and ACCOUNT_USERNAME_REQUIRED
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
 SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_EMAIL_VERIFICATION = 'none' # Or 'mandatory' if you want email verification
 SOCIALACCOUNT_LOGIN_ON_GET=True
