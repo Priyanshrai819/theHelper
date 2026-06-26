@@ -12,7 +12,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
+# Load variables from the .env file
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,7 +30,7 @@ SECRET_KEY = 'django-insecure-w&o@418=ibk%w2_kmzumjt1c)y^(+xnd$#y^n-@2d560754l_7
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    
+    '*',
     'thehelpers.qzz.io',
     'qzz.io',
     'localhost',
@@ -58,6 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Add this line for static file handling for render hosting and deployment
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -153,6 +157,8 @@ STATICFILES_DIRS = [
     BASE_DIR / "static"
 ]
 
+# Where Django will collect all static files for production (Render)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files settings
 MEDIA_URL = '/media/'
@@ -160,8 +166,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Ensure the media directory exists
 
 
-RAZORPAY_API_KEY = 'rzp_test_SfNAZbuC5AYJrF'
-RAZORPAY_API_SECRET = 'zK7gvlwTzeuufTQ6pTIWWiGR'
+RAZORPAY_API_KEY = os.getenv('RAZORPAY_API_KEY')
+RAZORPAY_API_SECRET = os.getenv('RAZORPAY_API_SECRET')
 
 
 
@@ -186,10 +192,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # Replace these with your actual email and app password
-EMAIL_HOST_USER = 'priyanshrai819@gmail.com' 
-EMAIL_HOST_PASSWORD = 'dqdm lsud rhpj dhro' 
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
-DEFAULT_FROM_EMAIL = 'theHelpers <no-reply@thehelpers.qzz.io>'
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')  #'theHelpers <no-reply@thehelpers.qzz.io>'
 
 
 
