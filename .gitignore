@@ -1,4 +1,15 @@
-"db.sqlite3" 
-"__pycache__/" 
-"*.pyc" 
-".env" 
+# Secrets
+.env
+helpme/.env
+
+# Databases
+*.sqlite3
+db.sqlite3
+
+# Python cache (matches all apps automatically)
+__pycache__/
+*.pyc
+
+# OS temporary files
+.DS_Store
+Thumbs.db
