@@ -95,19 +95,38 @@ WSGI_APPLICATION = 'helpme.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',  # Use SQLite for development
+#         'NAME': BASE_DIR / 'db.sqlite3',  # Use SQLite for development
+#         # 'ENGINE': 'django.db.backends.postgresql',  # Use PostgreSQL for production
+#         # 'NAME': 'thehelpers',#<PGDATABASE>
+#         # 'USER': 'postgres',#<PGUSER>
+#         # 'PASSWORD': '123',#<PGPASSWORD>
+#         # 'HOST': 'localhost',#<PGHOST>
+#         # 'PORT': '5432', #<PGPORT>
+
+#     }
+# }
+
+# Standard Database Setup
 DATABASES = {
     'default': {
-        # 'ENGINE': 'django.db.backends.sqlite3',  # Use SQLite for development
-        # 'NAME': BASE_DIR / 'db.sqlite3',  # Use SQLite for development
-        'ENGINE': 'django.db.backends.postgresql',  # Use PostgreSQL for production
-        'NAME': 'thehelpers',#<PGDATABASE>
-        'USER': 'postgres',#<PGUSER>
-        'PASSWORD': '123',#<PGPASSWORD>
-        'HOST': 'localhost',#<PGHOST>
-        'PORT': '5432', #<PGPORT>
-
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', ''),
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', ''),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
+
+# Dummy in-memory DB during collectstatic so build never touches PostgreSQL
+if 'collectstatic' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
 
 
 # Password validation
